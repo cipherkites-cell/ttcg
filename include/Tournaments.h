@@ -102,7 +102,7 @@ inline unsigned tournamentEligibility(const CollectionSave& s, unsigned hold) {
     return r.rank >= Unsung ? 1 : 0;
 }
 inline const char* tournamentCircuitName(unsigned circuit) {
-    return circuit == 2 ? "Tessera Masters" : circuit == 1 ? "Invitational" : "Tournament";
+    return circuit == 2 ? "泰塞拉大师赛" : circuit == 1 ? "邀请赛" : "锦标赛";
 }
 inline bool tournamentField(const CollectionSave& s, int i, unsigned circuit) {
     return tournamentEntrant(s, i) && (opponents[i].traveller || (circuit == 2   ? opponents[i].level == 5

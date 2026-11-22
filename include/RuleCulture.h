@@ -1,4 +1,5 @@
 #pragma once
+#include "ChineseText.h"
 #include "RegionalRules.h"
 #include "Presentation.h"
 #include "GameDate.h"
@@ -173,20 +174,20 @@ inline CultureChange finishRuleCulture(CollectionSave& s, int i, int winner, uns
     return change;
 }
 inline std::string cultureChangeText(const CultureChange& c) {
-    if (c.abolitionFailed) return "The rule stays. You can challenge for abolition again in seven game days.";
-    if (c.spreadFailed) return "The visiting rule did not catch on. Local rules are unchanged.";
+    if (c.abolitionFailed) return "规则保持不变。七个游戏日后可以再次发起废除挑战。";
+    if (c.spreadFailed) return "外来规则没能流行开来，本地规则不变。";
     std::string text;
     for (unsigned bit : ruleFlags)
         if (c.added & bit) {
             if (!text.empty()) text += ' ';
-            text += std::string(ruleName(bit)) + " has spread to " + holdName(c.hold) + ".";
+            text += "“" + zhChineseRule(ruleName(bit)) + "”已传播到" + zhHoldText(holdName(c.hold)) + "。";
         }
     for (unsigned bit : ruleFlags)
         if (c.removed & bit) {
             if (!text.empty()) text += ' ';
-            text += std::string(ruleName(bit)) + " has been abolished in " + holdName(c.hold) + ".";
+            text += "“" + zhChineseRule(ruleName(bit)) + "”已在" + zhHoldText(holdName(c.hold)) + "被废除。";
         }
-    if ((c.removed & (Open | ThreeOpen)) && !(c.added & (Open | ThreeOpen))) text += " Unplayed hands are now hidden.";
+    if ((c.removed & (Open | ThreeOpen)) && !(c.added & (Open | ThreeOpen))) text += " 未出的手牌现在会隐藏。";
     return text;
 }
 inline std::string regionalChangesJson(const CollectionSave& s, unsigned hold, unsigned hour, GameDate date = {}) {

@@ -52,6 +52,43 @@ inline std::string zhHoldText(std::string_view english) {
 // segment goes through the table on its own.
 // A save made before the translation still holds "Deck 1" as its name; that is
 // the only stock name the UI shows, so it is translated on the way out.
+// Tournament venues keep their English keys: the host name is compared against the
+// authored roster when a courier is matched. Only the two strings the board draws
+// go through here.
+inline std::string zhVenueText(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 10> table{{
+        {"The Bannered Mare", "悬旗母马"},
+        {"Dead Man's Drink", "亡者之饮"},
+        {"The Winking Skeever", "眨眼恶鼠"},
+        {"Moorside Inn", "坞边旅店"},
+        {"Windpeak Inn", "风岳旅店"},
+        {"The Bee and Barb", "蜂与钩"},
+        {"The Frozen Hearth", "冻炉旅店"},
+        {"Candlehearth Hall", "烛炉堂"},
+        {"Silver-Blood Inn", "银血旅店"},
+        {"The Retching Netch", "呕吐气母"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
+inline std::string zhHostText(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 10> table{{
+        {"Hulda", "胡尔达"},
+        {"Valga Vinicia", "瓦尔加·维尼西亚"},
+        {"Corpulus Vinius", "科普卢斯·维尼乌斯"},
+        {"Jonna", "乔娜"},
+        {"Thoring", "梭灵"},
+        {"Keerava", "基拉瓦"},
+        {"Dagur", "达古尔"},
+        {"Elda Early-Dawn", "“拂晓”艾尔达"},
+        {"Kleppr", "克莱珀"},
+        {"Geldis Sadri", "吉迪斯·萨德利"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
 inline std::string zhDeckText(std::string_view name) {
     if (name.size() > 5 && name.substr(0, 5) == "Deck " &&
         name.find_first_not_of("0123456789", 5) == std::string_view::npos)
@@ -951,4 +988,3 @@ inline std::string_view zhRoute(std::string_view value) {
 }
 
 } // namespace ttcg
-//（注：内容由AI生成）

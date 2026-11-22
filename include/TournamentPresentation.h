@@ -1,4 +1,5 @@
 #pragma once
+#include "ChineseText.h"
 #include "Tournaments.h"
 #include "Presentation.h"
 #include "GameDate.h"
@@ -34,9 +35,9 @@ inline std::string tournamentsJson(const CollectionSave& s, unsigned hour, unsig
         const bool atVenue = venue == e.hold;
         out += std::format(
             "{{\"id\":{},\"hold\":{},\"name\":{},\"venue\":{},\"host\":{},\"announced\":{},\"starts\":{},\"ends\":{},\"rules\":{},\"fee\":{},\"purse\":{},\"reward\":{},\"prize\":{},\"trophy\":{},\"joined\":{},\"eliminated\":{},\"champion\":{},\"atVenue\":{},\"round\":{},\"development\":{}",
-            e.id, e.hold, quote(holdName(e.hold)), quote(tournamentVenues[e.hold - 1].name),
-            quote(tournamentVenues[e.hold - 1].host), e.announced, e.starts, e.ends, e.rules, e.fee, e.purse, e.reward,
-            quote(tournamentPrize(e)), displayIndex(e.trophy), e.joined ? "true" : "false",
+            e.id, e.hold, quote(zhHoldText(holdName(e.hold))), quote(zhVenueText(tournamentVenues[e.hold - 1].name)),
+            quote(zhHostText(tournamentVenues[e.hold - 1].host)), e.announced, e.starts, e.ends, e.rules, e.fee,
+            e.purse, e.reward, quote(tournamentPrize(e)), displayIndex(e.trophy), e.joined ? "true" : "false",
             e.eliminated ? "true" : "false", e.bracket[14], atVenue ? "true" : "false",
             node == 8    ? 1
             : node == 12 ? 2
