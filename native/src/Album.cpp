@@ -105,8 +105,7 @@ void App::cardGrid(ImVec2 at, ImVec2 size, bool changed) {
                 ImVec2(origin.x - 6 * scale, origin.y - 6 * scale + rowH - ImGui::GetStyle().ItemSpacing.y));
             ImGui::Dummy(ImVec2(0, 0));
         }
-    if (count == 0)
-        text(ImGui::GetCursorScreenPos() + ImVec2(10, 30) * scale, "没有匹配的卡", 26, palette().muted);
+    if (count == 0) text(ImGui::GetCursorScreenPos() + ImVec2(10, 30) * scale, "没有匹配的卡", 26, palette().muted);
     gridFade(edges);
     ImGui::EndChild();
 }
@@ -316,8 +315,8 @@ void App::decks(ImVec2 at, ImVec2 size) {
         } else {
             d->AddRect(art, art + ImVec2(cw, ch), slot == next ? palette().muted : palette().line, 2 * scale);
             text(art + ImVec2(cw * .5f, ch * .5f - 15 * scale), "+", 26, palette().muted, 0, true);
-            text(ImVec2(textX, pos.y + extent.y * .5f - 24 * scale), collection.deck[slot] ? "不可用" : "空位",
-                 18, palette().muted);
+            text(ImVec2(textX, pos.y + extent.y * .5f - 24 * scale), collection.deck[slot] ? "不可用" : "空位", 18,
+                 palette().muted);
             text(ImVec2(textX, pos.y + extent.y * .5f + 3 * scale), place, 15, palette().muted);
         }
         ImGui::PopID();
@@ -389,7 +388,8 @@ void App::decks(ImVec2 at, ImVec2 size) {
             const ImVec2 pos(ax, summary.y + 40 * scale);
             ImGui::SetCursorScreenPos(pos);
             ImGui::InvisibleButton(("deck-affinity-" + std::to_string(a)).c_str(), ImVec2(35, 22) * scale);
-            itemTooltip(std::string(ttcg::zhAffinityName(static_cast<std::size_t>(a))) + "：" + std::to_string(affinities[a]));
+            itemTooltip(std::string(ttcg::zhAffinityName(static_cast<std::size_t>(a))) + "：" +
+                        std::to_string(affinities[a]));
             auto icon = assets.get("../icons/affinity-" + std::to_string(a) + ".png");
             d->AddImage(icon.id, pos, pos + ImVec2(20, 20) * scale);
             text(pos + ImVec2(23, 2) * scale, std::to_string(affinities[a]), 15, palette().muted);
@@ -451,9 +451,8 @@ void App::deckModal() {
         if (button("cancel", "取消", pos, ImVec2(180, 39) * scale) || backPressed()) {
             deckDialog.clear();
             ImGui::CloseCurrentPopup();
-        } else if (button("save-deck", remove ? "删除" : "保存", pos + ImVec2(215, 0) * scale,
-                          ImVec2(180, 39) * scale, true,
-                          !collection.busy && (remove || ttcg::validDeckName(deckName))) ||
+        } else if (button("save-deck", remove ? "删除" : "保存", pos + ImVec2(215, 0) * scale, ImVec2(180, 39) * scale,
+                          true, !collection.busy && (remove || ttcg::validDeckName(deckName))) ||
                    enter) {
             if (remove || ttcg::validDeckName(deckName)) {
                 request({{"action", deckDialog}, {"name", deckName}});

@@ -53,8 +53,7 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     const float width = size.x - nav - gap;
     const auto* current = tournament(eventID);
     if (!current) {
-        text(origin, history ? "没有锦标赛记录" : "和旅店老板交谈即可查找并报名锦标赛。", 21,
-             palette().muted, width);
+        text(origin, history ? "没有锦标赛记录" : "和旅店老板交谈即可查找并报名锦标赛。", 21, palette().muted, width);
         return;
     }
     const auto& e = *current;
@@ -285,8 +284,7 @@ void GameApp::tournamentOutcome() {
             }
         }
         if (upgrades) {
-            textBlock(std::to_string(upgrades) + " 次闪卡升级机会剩余",
-                      width - 60 * scale, 21, palette().accent);
+            textBlock(std::to_string(upgrades) + " 次闪卡升级机会剩余", width - 60 * scale, 21, palette().accent);
             std::vector<int> options;
             for (int i = 0; i < int(collection.cards.size()); ++i)
                 if (collection.cards[i].owned[0] > 0 && collection.cards[i].owned[1] < 1000000) options.push_back(i);
@@ -341,14 +339,13 @@ void GameApp::tournamentOutcome() {
                         ImGui::Dummy(ImVec2(1, 0));
                     }
                 if (shown.empty())
-                    text(ImGui::GetCursorScreenPos() + ImVec2(0, 20 * scale), "没有这张卡", 18,
-                         palette().muted);
+                    text(ImGui::GetCursorScreenPos() + ImVec2(0, 20 * scale), "没有这张卡", 18, palette().muted);
                 ImGui::EndChild();
                 // The chosen card, and the button that spends an upgrade on it.
                 const auto chosen = p + ImVec2(gridWidth + 20 * scale, 0);
                 displayCard(foilSelection, chosen, ImVec2(156, 208) * scale, false, -1, MaterialSlot::foilChoice);
-                text(chosen + ImVec2(0, 216 * scale), fitted(ttcg::zhCardName(collection.cards[foilSelection].name), 17, side), 18,
-                     palette().ink);
+                text(chosen + ImVec2(0, 216 * scale),
+                     fitted(ttcg::zhCardName(collection.cards[foilSelection].name), 17, side), 18, palette().ink);
                 if (button("upgrade", "制成闪卡", chosen + ImVec2(0, 250) * scale, ImVec2(200, 43) * scale, true,
                            !pendingCommand))
                     send("tournament", "foil " + std::to_string(eventID) + " " + std::to_string(foilSelection));
@@ -619,8 +616,7 @@ void GameApp::resultModal() {
                 float x = footer.x + 250 * scale;
                 x += keyPrompt("Mouse1", "360_A", "Select", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
                 x += keyPrompt("Mouse2", "360_Y", "Inspect", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
-                if (choice)
-                    text(ImVec2(x, footer.y + 11 * scale), "选择要带走的战利品。", 15, palette().muted);
+                if (choice) text(ImVec2(x, footer.y + 11 * scale), "选择要带走的战利品。", 15, palette().muted);
             }
             if (button("trade-inspect", "查看", footer + ImVec2(width - 302 * scale, 0), ImVec2(126, 40) * scale)) {
                 const int index = trade.inspected;
@@ -637,8 +633,8 @@ void GameApp::resultModal() {
                 }
             // Cards taken by a rule or by the opponent stay up until the player has seen them.
             if (trade.phase == TradeView::Reviewing && settled && !trade.chose && transfers > 0)
-                if (button("trade-continue", "继续", footer + ImVec2(width - 150 * scale, 0),
-                           ImVec2(150, 40) * scale, true))
+                if (button("trade-continue", "继续", footer + ImVec2(width - 150 * scale, 0), ImVec2(150, 40) * scale,
+                           true))
                     trade.acknowledged = true;
             // Render the gathering flights above the panel, at full colour.
             d->PushClipRect(frameAt, frameAt + frameSize, false);

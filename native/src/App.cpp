@@ -86,9 +86,7 @@ App::App(Renderer& r, const Options& o) : renderer(r), options(o), assets(r, o.t
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
-    const auto fontRoot = [&] {
-        return o.hosted ? o.tesseraRoot / "TesseraUI/fonts" : o.previewRoot / "assets/fonts";
-    };
+    const auto fontRoot = [&] { return o.hosted ? o.tesseraRoot / "TesseraUI/fonts" : o.previewRoot / "assets/fonts"; };
     const auto addFace = [&](const std::filesystem::path& path, float sizeScale) -> ImFont* {
         if (!std::filesystem::is_regular_file(path)) return nullptr;
         ImFontConfig config;

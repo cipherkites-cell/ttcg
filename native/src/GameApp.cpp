@@ -338,8 +338,8 @@ float GameApp::factRows(const CardView& c, ImVec2 at, float width, bool draw, bo
     for (int a = 0; a < 5; ++a)
         if (c.affinityMask & (1u << a))
             affinity += (affinity.empty() ? "" : "、") + std::string(ttcg::zhAffinityName(static_cast<std::size_t>(a)));
-    rows.push_back({"亲和", affinity.empty() ? "中立" : affinity,
-                    affinity.empty() ? palette().muted : palette().ink, c.affinityMask});
+    rows.push_back({"亲和", affinity.empty() ? "中立" : affinity, affinity.empty() ? palette().muted : palette().ink,
+                    c.affinityMask});
     if (!c.set.empty() && !compact) rows.push_back({"系列", std::string(ttcg::zhSet(c.set)), palette().ink});
     if (collection.connected) {
         const int other = c.owned[selectedFoil ? 0 : 1];
@@ -351,10 +351,10 @@ float GameApp::factRows(const CardView& c, ImVec2 at, float width, bool draw, bo
     }
     if (c.unique) rows.push_back({"唯一", "每副牌组限一张", palette().muted});
     if (inspectionModifier && inspecting)
-        rows.push_back({"此格效果",
-                        std::string(inspectionModifier > 0 ? "+" : "−") + std::to_string(std::abs(inspectionModifier)) +
-                            " 全边",
-                        palette().accent});
+        rows.push_back(
+            {"此格效果",
+             std::string(inspectionModifier > 0 ? "+" : "−") + std::to_string(std::abs(inspectionModifier)) + " 全边",
+             palette().accent});
     const float rowHeight = 31 * scale;
     auto* d = ImGui::GetWindowDrawList();
     float y = at.y;
@@ -765,8 +765,7 @@ void GameApp::draw() {
         }
         keyPrompt("E", "360_RB", "", ImVec2(x - 6 * scale, tabY + 5 * scale));
         if (flag(state, "matchContext") &&
-            button("return", "返回游戏", ImVec2(at.x + width - 215 * scale, tabY + scale),
-                   ImVec2(160, 38) * scale))
+            button("return", "返回游戏", ImVec2(at.x + width - 215 * scale, tabY + scale), ImVec2(160, 38) * scale))
             send("browse", "lobby");
         const auto& interrupted = member(state, "interruptedMatch");
         if (!interrupted.is_null() && !interrupted.empty()) {
@@ -777,8 +776,8 @@ void GameApp::draw() {
             text(body + ImVec2(0, 3 * scale), offer, 18, palette().accent);
             float x = font()->CalcTextSizeA(18 * scale, 1e5f, 0, offer.c_str()).x + 26 * scale;
             if (flag(interrupted, "canResume")) {
-                if (button("resume", finished ? "领奖" : "继续", body + ImVec2(x, -5 * scale),
-                           ImVec2(105, 35) * scale, true))
+                if (button("resume", finished ? "领奖" : "继续", body + ImVec2(x, -5 * scale), ImVec2(105, 35) * scale,
+                           true))
                     send("interrupted", "resume");
                 x += 117 * scale;
             }

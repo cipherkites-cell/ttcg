@@ -46,12 +46,10 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
         for (unsigned i = 0; i < ttcg::creatureGroups.size(); ++i) groups.emplace_back(ttcg::zhGroupName(i));
         int group = filter.group + 1;
         if (combo("##group", "分组", group, groups, 330 * scale)) filter.group = group - 1;
-        combo("##rarity", "稀有度", filter.rarity, {"全部稀有度", "普通", "稀有", "史诗", "传说"},
-              330 * scale);
+        combo("##rarity", "稀有度", filter.rarity, {"全部稀有度", "普通", "稀有", "史诗", "传说"}, 330 * scale);
         combo("##finish", "版本", filter.finish, {"全部版本", "普通", "闪卡"}, 330 * scale);
         int affinity = filter.affinity + 1;
-        if (combo("##affinity", "亲和", affinity,
-                  {"全部亲和", "中立", "力量", "智力", "意志", "敏捷", "耐力"},
+        if (combo("##affinity", "亲和", affinity, {"全部亲和", "中立", "力量", "智力", "意志", "敏捷", "耐力"},
                   330 * scale))
             filter.affinity = affinity - 1;
         std::vector<std::string> sets{"全部系列", "Tessera"}, keys{"", "tessera"};
@@ -174,8 +172,9 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
         if (!filter.set.empty() && (c.setKey.empty() ? "tessera" : c.setKey) != filter.set) continue;
         if (query[0]) {
             const auto& raw = state["cards"][id];
-            const auto hay = lower(ttcg::zhCardName(c.name) + " " + c.name + " " + c.rarity + " " + join(member(raw, "groups")) + " " +
-                                   join(member(raw, "subtypes")) + " " + join(member(raw, "affinities")));
+            const auto hay =
+                lower(ttcg::zhCardName(c.name) + " " + c.name + " " + c.rarity + " " + join(member(raw, "groups")) +
+                      " " + join(member(raw, "subtypes")) + " " + join(member(raw, "affinities")));
             if (hay.find(lower(query)) == std::string::npos) continue;
         }
         visible.push_back(id);
@@ -194,7 +193,9 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
                         std::find(rarity.begin(), rarity.end(), y.rarity));
         }
         if (order) return filter.sort == 1 || filter.sort == 3 ? order > 0 : order < 0;
-        return ttcg::zhCardName(x.name) != ttcg::zhCardName(y.name) ? ttcg::zhCardName(x.name) < ttcg::zhCardName(y.name) : a < b;
+        return ttcg::zhCardName(x.name) != ttcg::zhCardName(y.name)
+                   ? ttcg::zhCardName(x.name) < ttcg::zhCardName(y.name)
+                   : a < b;
     });
     countLabel();
 }
@@ -238,7 +239,8 @@ void GameApp::drawDetail(ImVec2 at, ImVec2 size) {
     const bool inset = skinPiece("detail");
     if (!skinBand("band", ImVec2(at.x, y), ImVec2(size.x, 40 * scale)))
         skinBand("selector", ImVec2(at.x, y), ImVec2(size.x, 40 * scale));
-    const float fit = std::min(19.f, 19.f * (size.x - 24 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(c.name), 19, 1)));
+    const float fit =
+        std::min(19.f, 19.f * (size.x - 24 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(c.name), 19, 1)));
     textCaps(ImVec2(mid, y + (40 - fit * 1.25f) * .5f * scale), ttcg::zhCardName(c.name), fit, palette().ink, 1, true);
     y += 44 * scale;
     y += factRows(c, ImVec2(at.x + (inset ? 10 : 2) * scale, y), size.x - (inset ? 20 : 4) * scale) + 16 * scale;

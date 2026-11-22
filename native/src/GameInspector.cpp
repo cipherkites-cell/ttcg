@@ -31,9 +31,10 @@ void GameApp::nativeInspector() {
     const ImVec2 centre = artAt + ImVec2(w, h) * .5f;
     const auto& c = collection.cards[selected];
     if (!showTableDetails)
-        textCaps(origin + ImVec2(extent.x / 2, 26 * scale), ttcg::zhCardName(c.name),
-                 std::min(24.f, 24.f * (extent.x - 90 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(c.name), 24, 2))),
-                 palette().ink, 2, true);
+        textCaps(
+            origin + ImVec2(extent.x / 2, 26 * scale), ttcg::zhCardName(c.name),
+            std::min(24.f, 24.f * (extent.x - 90 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(c.name), 24, 2))),
+            palette().ink, 2, true);
     ImGui::SetCursorScreenPos(artAt);
     ImGui::InvisibleButton("rotate-art", ImVec2(w, h), ImGuiButtonFlags_EnableNav);
     if (ImGui::IsItemHovered()) ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeAll);

@@ -13,9 +13,9 @@ bool GameApp::ruleRequestModal() {
         ruleAnswerPending = false;
         return false;
     }
-    std::string copy =
-        offer ? "你从" + label(culture, "source") + "带来了“" + rulesLabel(offer, false) + "”，要试试吗？"
-              : "我们可以用“" + rulesLabel(request, false) + "”来一局吗？";
+    std::string copy = offer
+                           ? "你从" + label(culture, "source") + "带来了“" + rulesLabel(offer, false) + "”，要试试吗？"
+                           : "我们可以用“" + rulesLabel(request, false) + "”来一局吗？";
     if (offer) {
         if (const auto replaced = number(culture, "replaces"))
             copy += " It replaces " + rulesLabel(replaced, false) + " for this game.";
@@ -201,8 +201,8 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
         } else
             textRight(ImVec2(terms.x + panel, ay + 8 * scale), fixed > 0 ? std::to_string(fixed) + " 金币" : "无", 18,
                       palette().ink);
-        textRight(ImVec2(terms.x + panel, ay + 44 * scale), "你带着 " + std::to_string(number(c, "gold")) + " 金币",
-                  15, palette().muted);
+        textRight(ImVec2(terms.x + panel, ay + 44 * scale), "你带着 " + std::to_string(number(c, "gold")) + " 金币", 15,
+                  palette().muted);
         ay += 72 * scale;
     }
     const bool complete = std::all_of(collection.deck.begin(), collection.deck.end(), [](auto id) { return id != 0; });
@@ -242,20 +242,21 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
             ImGui::OpenPopup("废除规则");
         if (ImGui::BeginPopup("废除规则")) {
             const unsigned allowed = number(culture, "abolishableRules");
-            for (auto [bit, name] : ruleNames)
-                if (allowed & bit)
+            for (auto [bit, name] : ruleNames) {
+                if (allowed & bit) {
                     const auto shown = zhRuleName(name);
                     if (ImGui::Selectable((shown + "##" + name).c_str())) {
-                        confirm("挑战“" + shown + "”？", "获胜即可尝试在本领地废除该规则。",
-                                "culture", "abolish " + std::to_string(bit), "挑战");
+                        confirm("挑战“" + shown + "”？", "获胜即可尝试在本领地废除该规则。", "culture",
+                                "abolish " + std::to_string(bit), "挑战");
                     }
+                }
+            }
             ImGui::EndPopup();
         }
     } else if (flag(culture, "expert") && flag(culture, "famous") && number(culture, "retryHours") > 0) {
         // A challenge, won or lost, closes the next one for seven days. Say when it opens.
         const int days = (number(culture, "retryHours") + 23) / 24;
-        text(footer + ImVec2(210, 32) * scale,
-             "规则挑战将在 " + std::to_string(days) + " 天后重新开放", 15,
+        text(footer + ImVec2(210, 32) * scale, "规则挑战将在 " + std::to_string(days) + " 天后重新开放", 15,
              palette().muted);
     }
     if (number(c, "ruleLesson") || number(member(member(state, "settings"), "development"), "RuleLesson"))
@@ -288,8 +289,7 @@ void GameApp::groupModal() {
     if (ImGui::BeginPopupModal("选择分组", nullptr,
                                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | popupFlags())) {
         popupSurface();
-        textBlock(number(state, "rules") & 128 ? "选择军团分组" : "选择减损分组", 400 * scale,
-                  26, palette().accent);
+        textBlock(number(state, "rules") & 128 ? "选择军团分组" : "选择减损分组", 400 * scale, 26, palette().accent);
         ImGui::Dummy(ImVec2(0, 15 * scale));
         for (int g : groupChoices) {
             auto p = ImGui::GetCursorScreenPos();
@@ -795,7 +795,8 @@ void GameApp::matchPanel(ImVec2 at, ImVec2 size) {
              0, true);
     const auto group = label(state, "activeGroup");
     if (!group.empty())
-        text(foot, ttcg::zhGroupText(group) + " " + (number(state, "groupModifier") > 0 ? "+1" : "−1"), 18, palette().accent);
+        text(foot, ttcg::zhGroupText(group) + " " + (number(state, "groupModifier") > 0 ? "+1" : "−1"), 18,
+             palette().accent);
     if (button("reference", "规则", foot + ImVec2(size.x - 100 * scale, -7 * scale), ImVec2(100, 32) * scale, false,
                !presentation.pending(state))) {
         showRuleReference = true;

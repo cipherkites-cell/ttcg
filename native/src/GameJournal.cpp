@@ -100,8 +100,8 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
             text(pos + ImVec2(rowWidth - 180 * scale, 14 * scale), record, 15, palette().muted, 168 * scale);
         }
     if (rows.empty())
-        text(ImGui::GetCursorScreenPos() + ImVec2(listWidth / 2, 48 * scale), "没有已知的玩家", 21, palette().muted,
-             0, true);
+        text(ImGui::GetCursorScreenPos() + ImVec2(listWidth / 2, 48 * scale), "没有已知的玩家", 21, palette().muted, 0,
+             true);
     ImGui::PopStyleVar();
     ImGui::EndChild();
     if (journalPlayer >= 0 && journalPlayer < int(roster.size())) {
@@ -127,15 +127,15 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
             {"领地", flag(p, "traveller") ? "旅行者" : label(p, "hold")},
             {"水平", label(p, "skill")},
             {"对局", friendly              ? "仅练习"
-                      : flag(p, "unlocked") ? "可对战"
-                                            : "尚未就绪"}};
+                     : flag(p, "unlocked") ? "可对战"
+                                           : "尚未就绪"}};
         if (!friendly && p.contains("rules")) {
             // What a game with them is played for. M'aiq's rules change with every game.
             const auto rules = rulesLabel(unsigned(number(p, "rules")));
             facts.push_back({flag(p, "ownRules") ? "自有规则" : "规则", flag(p, "traveller") && flag(p, "ownRules")
-                                                                              ? "每局不同"
-                                                                          : rules.empty() ? "暗牌"
-                                                                                          : rules});
+                                                                            ? "每局不同"
+                                                                        : rules.empty() ? "暗牌"
+                                                                                        : rules});
             facts.push_back({"交易", zhTradeName(number(p, "trade"))});
             if (number(p, "wager") > 0)
                 facts.push_back({"Wager", "Up to " + std::to_string(number(p, "wager")) + " gold"});

@@ -228,8 +228,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         select("数值样式", "card-ranks", "rankLayout", {"边缘数值", "经典数值"});
         toggle("显示卡名", "card-names", "showCardNames");
         toggle("显示分组", "card-groups", "showCardGroups");
-        if (face.legacy())
-            select("铭牌样式", "nameplate", "nameplateStyle", {"阴影带", "柔和渐变", "印在原画"});
+        if (face.legacy()) select("铭牌样式", "nameplate", "nameplateStyle", {"阴影带", "柔和渐变", "印在原画"});
         select("字型", "name-case", "nameCase", {"跟随皮肤", "首字母大写", "全大写"});
         if (face.legacy()) {
             heading("点数");
@@ -269,8 +268,8 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         }
         heading("控制色");
         select("调色板", "match-palette", "controlPalette",
-               {skin().player && skin().opponent ? "皮肤配色" : "Tessera", "蓝 · 琥珀", "紫 · 薄荷",
-                "象牙 · 石板", "自定义"});
+               {skin().player && skin().opponent ? "皮肤配色" : "Tessera", "蓝 · 琥珀", "紫 · 薄荷", "象牙 · 石板",
+                "自定义"});
         if (valueOf("controlPalette") == 4) {
             const auto colour = [&](const char* title, const char* key, const char* json) {
                 const auto p = ImGui::GetCursorScreenPos();
@@ -368,9 +367,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         if (!missing.empty()) {
             textBlock("不可用的卡", width, 21, palette().accent);
             ImGui::Dummy(ImVec2(0, 16 * scale));
-            textBlock("缺少扩展：" + missing +
-                          "。重新安装可恢复卡牌，或移除这些卡在本角色上的存档副本。",
-                      width, 18);
+            textBlock("缺少扩展：" + missing + "。重新安装可恢复卡牌，或移除这些卡在本角色上的存档副本。", width, 18);
             const auto blocked = label(collectionState, "recoveryBlocked");
             ImGui::BeginDisabled(pendingCommand || capturing() || !member(state, "interruptedMatch").empty() ||
                                  !blocked.empty());
@@ -431,8 +428,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
                 "会删除本角色所有卡与闪卡（含不可用的卡），清除发现记录并清空全部牌组。相册、金币与游戏进度保留。自动发卡与“揭示全部卡牌”会对所有角色关闭。删除后只能靠较早的存档找回。",
                 "collection-recovery", "clear confirm", "清空收藏");
         ImGui::EndDisabled();
-        textBlock(blocked.empty() ? "从空相册重新开始收集。游戏进度保留。" : blocked,
-                  width, 18);
+        textBlock(blocked.empty() ? "从空相册重新开始收集。游戏进度保留。" : blocked, width, 18);
         ImGui::Dummy(ImVec2(0, 18 * scale));
         const auto resetBlocked = label(member(state, "collection"), "resetBlocked", blocked);
         ImGui::BeginDisabled(pendingCommand || capturing() || !member(state, "interruptedMatch").empty() ||
@@ -443,9 +439,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
                 "会清空收藏、牌组、战绩、声望、锦标赛与地区规则改动，重置 NPC 与商人收藏，取消换卡，并移除携带的卡包与旧邀请函。相册保留，并发放八张起始卡与一套起始牌组。金币与界面偏好不变，开发者覆盖项对所有角色恢复默认。只能靠较早的存档撤销。",
                 "collection-recovery", "reset confirm", "重置 Tessera");
         ImGui::EndDisabled();
-        textBlock(resetBlocked.empty()
-                      ? "用相册与起始卡重新开始 Tessera。所有 Tessera 进度会被清除。"
-                      : resetBlocked,
+        textBlock(resetBlocked.empty() ? "用相册与起始卡重新开始 Tessera。所有 Tessera 进度会被清除。" : resetBlocked,
                   width, 18);
         heading("锦标赛");
         devToggle("常规锦标赛", "RegularTournaments", "RegularTournaments");
@@ -481,8 +475,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         if (combo("dev-trade", "交易规则", trade, {"默认", "无", "一张", "分差", "直接", "全部"}, width))
             send("development", "set TradeRule " + std::to_string(trade - 1));
         int skill = number(dev, "OpponentSkill", -1) + 1;
-        if (combo("dev-skill", "对手水平", skill,
-                  {"默认", "新手", "学徒", "普通", "熟练", "专家", "大师"}, width))
+        if (combo("dev-skill", "对手水平", skill, {"默认", "新手", "学徒", "普通", "熟练", "专家", "大师"}, width))
             send("development", "set OpponentSkill " + std::to_string(skill - 1));
         std::vector<int> wagers{-1};
         std::vector<std::string> wagerLabels{"默认"};
@@ -495,8 +488,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         if (combo("dev-wager", "赌注", wager, wagerLabels, width))
             send("development", "set Wager " + std::to_string(wagers[wager]));
         int lesson = number(dev, "RuleLesson");
-        if (combo("dev-lesson", "规则教学", lesson, {"关闭", "三明牌", "军团", "减损", "亲和"},
-                  width))
+        if (combo("dev-lesson", "规则教学", lesson, {"关闭", "三明牌", "军团", "减损", "亲和"}, width))
             send("development", "set RuleLesson " + std::to_string(lesson));
         if (!label(dev, "notice").empty()) textBlock(label(dev, "notice"), width, 18, palette().accent);
     }
@@ -527,7 +519,8 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         };
         if (button("previous-preview", "←", buttons, ImVec2(35, 36) * scale)) step(-1);
         if (button("next-preview", "→", buttons + ImVec2(w - 35 * scale, 0), ImVec2(35, 36) * scale)) step(1);
-        text(buttons + ImVec2(w / 2, 0), ttcg::zhCardName(collection.cards[selected].name), 18, palette().muted, w - 90 * scale, true);
+        text(buttons + ImVec2(w / 2, 0), ttcg::zhCardName(collection.cards[selected].name), 18, palette().muted,
+             w - 90 * scale, true);
         if (button("turn-preview", previewBack ? "看正面" : "看背面",
                    buttons + ImVec2((w - 145 * scale) / 2, 58 * scale), ImVec2(145, 38) * scale))
             previewBack = !previewBack;

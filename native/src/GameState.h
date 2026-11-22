@@ -55,11 +55,25 @@ inline const char* zhTradeName(int value) {
 }
 inline std::string zhRuleName(std::string_view english) {
     static const std::array<std::pair<std::string_view, std::string_view>, 19> table{{
-        {"How to play", "玩法说明"}, {"Vanguard", "先锋"}, {"Open", "明牌"}, {"Three Open", "三明牌"},
-        {"Same", "相同"}, {"Same Wall", "同墙"}, {"Plus", "相加"}, {"Reverse", "逆转"},
-        {"Fallen Ace", "落难王牌"}, {"Affinity", "亲和"}, {"Legion", "军团"}, {"Decimation", "减损"},
-        {"Order", "顺序"}, {"Chaos", "混乱"}, {"Swap", "交换"}, {"Sudden Death", "骤死"},
-        {"Ascension", "升格"}, {"Descension", "降格"}, {"Dominion", "统御"},
+        {"How to play", "玩法说明"},
+        {"Vanguard", "先锋"},
+        {"Open", "明牌"},
+        {"Three Open", "三明牌"},
+        {"Same", "相同"},
+        {"Same Wall", "同墙"},
+        {"Plus", "相加"},
+        {"Reverse", "逆转"},
+        {"Fallen Ace", "落难王牌"},
+        {"Affinity", "亲和"},
+        {"Legion", "军团"},
+        {"Decimation", "减损"},
+        {"Order", "顺序"},
+        {"Chaos", "混乱"},
+        {"Swap", "交换"},
+        {"Sudden Death", "骤死"},
+        {"Ascension", "升格"},
+        {"Descension", "降格"},
+        {"Dominion", "统御"},
     }};
     for (const auto& entry : table)
         if (entry.first == english) return std::string(entry.second);

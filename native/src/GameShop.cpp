@@ -6,8 +6,8 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
     text(at, label(s, "name"), 32, palette().accent);
     if (flag(s, "specialist")) text(at + ImVec2(0, 44) * scale, "专营卡商", 18, palette().muted);
     text(at + ImVec2(size.x - 360 * scale, 3 * scale), std::to_string(number(s, "gold")) + " 金币", 21, palette().ink);
-    text(at + ImVec2(size.x - 360 * scale, 35 * scale),
-         "商人：" + std::to_string(number(s, "merchantGold")) + " 金币", 18, palette().muted);
+    text(at + ImVec2(size.x - 360 * scale, 35 * scale), "商人：" + std::to_string(number(s, "merchantGold")) + " 金币",
+         18, palette().muted);
     const char* tabs[]{"购买", "出售", "回购"};
     // Bumpers, or Q and E, step through the three lists, as they do through the album's tabs.
     if (!popupBeforeFrame && !ImGui::GetIO().WantTextInput && !inspecting &&
@@ -47,8 +47,7 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
         ImGui::SetCursorScreenPos(top);
         select("##inventory", shopSurplus, {"全部卡牌", "多余卡牌"}, 180 * scale);
         if (shopSurplus)
-            text(top + ImVec2(200, 8) * scale, "每张卡保留两份普通版本。", 15, palette().muted,
-                 width - 200 * scale);
+            text(top + ImVec2(200, 8) * scale, "每张卡保留两份普通版本。", 15, palette().muted, width - 200 * scale);
         top.y += 53 * scale;
     }
     std::vector<Json> rows;
@@ -125,8 +124,7 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
         }
     if (rows.empty() && shopTab != 2)
         text(ImGui::GetCursorScreenPos() + ImVec2(12, 32) * scale,
-             shopTab == 1 && shopSurplus ? "没有多余的卡。切换到“全部卡牌”可查看收藏。"
-                                         : "没有符合筛选条件的卡牌。",
+             shopTab == 1 && shopSurplus ? "没有多余的卡。切换到“全部卡牌”可查看收藏。" : "没有符合筛选条件的卡牌。",
              21, palette().muted, width - 24 * scale);
     gridFade(edges);
     ImGui::EndChild();
@@ -149,9 +147,10 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
     float y = art.y + dh + 14 * scale;
     if (!skinBand("band", ImVec2(detail.x, y), ImVec2(right, 40 * scale)))
         skinBand("selector", ImVec2(detail.x, y), ImVec2(right, 40 * scale));
-    const float fit = std::min(19.f, 19.f * (right - 24 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(card.name), 19, 1)));
-    textCaps(ImVec2(detail.x + right / 2, y + (40 - fit * 1.25f) * .5f * scale), ttcg::zhCardName(card.name), fit, palette().ink, 1,
-             true);
+    const float fit =
+        std::min(19.f, 19.f * (right - 24 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(card.name), 19, 1)));
+    textCaps(ImVec2(detail.x + right / 2, y + (40 - fit * 1.25f) * .5f * scale), ttcg::zhCardName(card.name), fit,
+             palette().ink, 1, true);
     y += 44 * scale;
     y += factRows(card, ImVec2(detail.x + 2 * scale, y), right - 4 * scale, true, true) + 14 * scale;
     selectedFoil = wasFoil;
@@ -198,8 +197,8 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
                                                      : "buy") +
                           " " + std::to_string(shopSelected) + " " + std::to_string(shopQuantity);
         if (!warnings.empty())
-            confirm("以 " + std::to_string(total) + " 金币出售“" + ttcg::zhCardName(card.name) + "”？", warnings, "shop",
-                    args + " 1", "出售");
+            confirm("以 " + std::to_string(total) + " 金币出售“" + ttcg::zhCardName(card.name) + "”？", warnings,
+                    "shop", args + " 1", "出售");
         else
             send("shop", args + " 0");
     }
