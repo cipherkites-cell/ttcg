@@ -79,11 +79,11 @@ void interruptPanel() {
     // packs, shops and other opponents until the player returns to this table.
     if (finished && player && !player->IsDead() && campaign::settleFinishedMatch()) {
         if (!campaign::receipt.empty())
-            RE::SendHUDMessage::ShowHUDMessage(("Tessera: " + campaign::receipt + ".").c_str());
+            RE::SendHUDMessage::ShowHUDMessage(("Tessera：" + campaign::receipt + "。").c_str());
         return;
     }
-    RE::SendHUDMessage::ShowHUDMessage(finished ? "Tessera interrupted. Collect your winnings from your album."
-                                                : "Tessera game interrupted. You can resume it later.");
+    RE::SendHUDMessage::ShowHUDMessage(finished ? "Tessera 对局中断。请在相册领取你的战利品。"
+                                                : "Tessera 对局已中断，稍后可继续。");
 }
 bool checkLiveWorld() {
     if (!visible || !worldFocus.unpaused()) return true;
@@ -101,7 +101,7 @@ bool checkLiveWorld() {
                 campaign::resolveSavedMatch(false);
                 active = false;
                 close(false);
-                RE::SendHUDMessage::ShowHUDMessage("The tournament has ended.");
+                RE::SendHUDMessage::ShowHUDMessage("锦标赛已结束。");
                 return false;
             }
         }
@@ -116,7 +116,7 @@ bool checkLiveWorld() {
             campaign::resolveSavedMatch(false);
             active = false;
             close(false);
-            RE::SendHUDMessage::ShowHUDMessage("Your Tessera game has been canceled.");
+            RE::SendHUDMessage::ShowHUDMessage("你的 Tessera 对局已取消。");
             return false;
         }
         // A finished table only shows its result and winnings; the opponent can leave.

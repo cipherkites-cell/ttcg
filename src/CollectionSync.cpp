@@ -140,7 +140,7 @@ unsigned tournamentLetterID(RE::TESObjectBOOK* book) {
     return 0;
 }
 std::string_view resetBlocked() {
-    if (tournamentLetterInFlight.load()) return "Wait for the pending courier request to finish first.";
+    if (tournamentLetterInFlight.load()) return "请先等待待处理的信使请求完成。";
     return ttcg::tesseraResetBlocked(saved, savedMatch.present);
 }
 bool removeResetItems() {

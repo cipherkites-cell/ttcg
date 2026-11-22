@@ -56,19 +56,19 @@ void finish(int winner, unsigned selection, std::uint32_t recoveryLedger) {
                 else
                     ++lost;
             }
-        if (won) receipt = std::format("Won {} card{}", won, won == 1 ? "" : "s");
+        if (won) receipt = std::format("获得 {} 张卡", won);
         if (lost) {
             if (!receipt.empty()) receipt += " · ";
-            receipt += std::format("Lost {} card{}", lost, lost == 1 ? "" : "s");
+            receipt += std::format("失去 {} 张卡", lost);
         }
         if (c.wager) {
             if (!receipt.empty()) receipt += " · ";
-            receipt += winner < 0 ? "Wager returned" : std::format("{}{} gold", winner == 0 ? "+" : "−", c.wager);
+            receipt += winner < 0 ? "赌注已退回" : std::format("{}{} 金币", winner == 0 ? "+" : "−", c.wager);
         }
     }
     Bank bank(c.opponent, recoveryLedger);
     if (!c.settleSelection(bank, winner, selection))
-        notice = "Inventory transfer pending.";
+        notice = "物品转移待完成。";
     else {
         if (c.completed) {
             auto actor = resolveID<RE::Actor>(c.opponent);
@@ -128,13 +128,13 @@ bool recoverSavedMatch() {
         (!event || !ttcg::tournamentOpen(*event, gameHour()) || event->eliminated || event->awarded ||
          !event->matchNode || event->matchNode != ttcg::tournamentNode(*event))) {
         resolveSavedMatch(false);
-        notice = "The tournament has ended.";
+        notice = "锦标赛已结束。";
         return false;
     }
     auto actor = resolveID<RE::Actor>(savedMatch.opponent);
     if (!actor || !actor->IsHumanoid() || actor->IsDead() || actor->IsDisabled()) {
         resolveSavedMatch(false);
-        notice = "Your interrupted game has been canceled.";
+        notice = "你未完成的对局已取消。";
         return false;
     }
     return true;
@@ -159,15 +159,15 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
     revealed.clear();
     revealKind.clear();
     if (!available()) {
-        notice = saveValid ? "Card data unavailable." : "Tessera can't read this save's data. Update Tessera.";
+        notice = saveValid ? "卡牌数据不可用。" : "Tessera 无法读取此存档的数据，请更新 Tessera。";
         return false;
     }
     recover();
     if (savedMatch.present) {
         if (actor) {
             notice = savedMatch.table.finished()
-                         ? "Open your album and collect your winnings from " + savedMatchName() + " first."
-                         : "Finish your game with " + savedMatchName() + " first.";
+                         ? "请先打开相册，从 " + savedMatchName() + " 处领取你的战利品。"
+                         : "请先结束你与 " + savedMatchName() + " 的对局。";
             return false;
         }
         owned = inventory(RE::PlayerCharacter::GetSingleton());
@@ -176,7 +176,7 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
         return true;
     }
     if (saved.contract.pending() || saved.goldCredit) {
-        notice = "Transfer pending.";
+        notice = "转移待完成。";
         return false;
     }
     seedOpponent(actor);
@@ -203,7 +203,7 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
     if (!actor) {
         canStake = false;
         rivalDeck = {};
-        if (ttcg::playableCount(owned) < 5) notice = "You need five cards.";
+        if (ttcg::playableCount(owned) < 5) notice = "你需要五张卡。";
         ttcg::retainOwnedDecks(saved);
         return true;
     }
@@ -211,9 +211,9 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
     canStake = !isChild(actor) && (profile(actor) || development.allowAnyNPC) && ttcg::playableCount(owned) >= 5 &&
                ttcg::playableCount(rival) >= 5;
     if (ttcg::playableCount(owned) < 5)
-        notice = "You need five cards.";
+        notice = "你需要五张卡。";
     else if (ttcg::playableCount(ttcg::playableOpponentStock(rival, i)) < 5) {
-        notice = "They don't have enough cards for a game.";
+        notice = "他们的卡不够开一局。";
         return false;
     }
     const auto base = actor->GetActorBase() ? persistentID(actor->GetActorBase()) : 0;
@@ -234,7 +234,7 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
     const auto* event = ttcg::tournament(saved, tournamentID);
     const auto node = event ? ttcg::tournamentNode(*event) : 0;
     if (event && !node) {
-        notice = "This tournament has no game to prepare.";
+        notice = "该锦标赛没有可准备的对局。";
         return false;
     }
     const auto seed =
@@ -248,13 +248,13 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
     rivalDeck =
         practice ? ttcg::childHand(rival, base, seed, sessionRules) : ttcg::opponentHand(rival, i, seed, sessionRules);
     if (!ttcg::validHand(rivalDeck, rival)) {
-        notice = "They don't have enough cards for a game.";
+        notice = "他们的卡不够开一局。";
         return false;
     }
     if (saved.culture.pending.kind && practice) {
         ttcg::abandonRuleCulture(saved, gameHour());
         sessionRules = terms(actor).rules;
-        notice = "Rule challenge canceled.";
+        notice = "规则挑战已取消。";
     }
     if (!tournamentID && cultureEnabled(actor)) ttcg::prepareRuleSpread(saved, i, gameHour());
     ttcg::retainOwnedDecks(saved);

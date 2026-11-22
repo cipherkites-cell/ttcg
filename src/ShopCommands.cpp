@@ -1,4 +1,5 @@
 // Buying and selling cards with a merchant.
+#include "ChineseText.h"
 #include "PluginState.h"
 
 namespace campaign {
@@ -48,7 +49,7 @@ bool shopCommand(RE::Actor* actor, std::istringstream& input) {
     if (saved.goldCredit || m.goldCredit) {
         ttcg::recoverShop(saved, m, bank);
         shop.notice = saved.goldCredit || m.goldCredit ? ttcg::shopMessage(ttcg::ShopResult::Pending)
-                                                       : "Payment completed. You can trade again.";
+                                                       : "付款已完成，可以继续交易。";
         return true;
     }
     const auto result = ttcg::tradeCard(saved, m, shop.visit, bank,
@@ -58,13 +59,13 @@ bool shopCommand(RE::Actor* actor, std::istringstream& input) {
                                         ttcg::displayCardID(index), quantity, confirm);
     shop.notice = ttcg::shopMessage(result);
     if (result == ttcg::ShopResult::Done) {
-        shop.notice = (action == "sell"      ? "Sold "
-                       : action == "buyback" ? "Bought back "
-                                             : "Bought ") +
-                      std::string(ttcg::cards[index % ttcg::cards.size()].name);
+        shop.notice = (action == "sell"      ? "已卖出 "
+                       : action == "buyback" ? "已购回 "
+                                             : "已购入 ") +
+                      ttcg::zhCardName(ttcg::cards[index % ttcg::cards.size()].name);
         if (quantity > 1) shop.notice += " ×" + std::to_string(quantity);
         shop.notice += '.';
-        if (saved.goldCredit || m.goldCredit) shop.notice += " Payment is pending.";
+        if (saved.goldCredit || m.goldCredit) shop.notice += " 款项待结算。";
     }
     return true;
 }

@@ -31,7 +31,7 @@ bool prepareTournament(unsigned id) {
             campaign::savedMatch = {};
         } else {
             if (campaign::savedMatch.tournament == id && resumeMatch()) return true;
-            campaign::notice = "Finish your interrupted game first.";
+            campaign::notice = "请先结束未完成的对局。";
             ++revision;
             publish();
             return true;
@@ -53,7 +53,7 @@ bool prepareTournament(unsigned id) {
     }
     auto actor = campaign::resolveActiveOpponent(ttcg::opponents[i]);
     if (!actor || actor->IsDead() || actor->IsDisabled()) {
-        campaign::notice = "Opponent unavailable.";
+        campaign::notice = "对手不可用。";
         ++revision;
         publish();
         return true;
@@ -106,7 +106,7 @@ bool tournamentCommand(std::istringstream& input) {
         if (!e || campaign::tournamentVenue() != e->hold) return false;
         campaign::notice = ttcg::upgradeTournamentFoil(campaign::saved, id, ttcg::displayCardID(int(card)))
                                ? ""
-                               : "Choose an owned card without a foil finish.";
+                               : "请选择一张未带闪卡版本的已拥有卡。";
         ++revision;
         publish();
         return true;
@@ -137,7 +137,7 @@ bool tournamentCommand(std::istringstream& input) {
     campaign::updateTournaments();
     const auto hour = campaign::gameHour();
     if (action == "pack") {
-        campaign::notice = campaign::openTournamentPack() ? "" : "Tournament pack unavailable.";
+        campaign::notice = campaign::openTournamentPack() ? "" : "锦标赛卡包不可用。";
     } else {
         auto* e = ttcg::tournament(saved, id);
         if (!e) return false;
@@ -146,12 +146,12 @@ bool tournamentCommand(std::istringstream& input) {
             campaign::Bank bank(0);
             const bool entered = withHost && ttcg::enterTournament(saved, id, hour, bank);
             campaign::notice = entered                                 ? ""
-                               : !withHost                             ? "Speak to the host to enter."
-                               : ttcg::tournamentEntryActive(saved)    ? "Finish your current tournament first."
-                               : !ttcg::tournamentOpen(*e, hour)       ? "This tournament has closed."
-                               : !ttcg::tournamentInvited(*e)          ? "An invitation is required."
-                               : ttcg::playableCount(saved.player) < 5 ? "You need five playable cards to enter."
-                                                                       : "Not enough gold for entry.";
+                               : !withHost                             ? "请与主持人交谈参加。"
+                               : ttcg::tournamentEntryActive(saved)    ? "请先完成当前锦标赛。"
+                               : !ttcg::tournamentOpen(*e, hour)       ? "该锦标赛已结束报名。"
+                               : !ttcg::tournamentInvited(*e)          ? "需要邀请函。"
+                               : ttcg::playableCount(saved.player) < 5 ? "参加需要五张可用的卡。"
+                                                                       : "金币不足，无法报名。";
             campaign::updateTournaments();
             if (entered && prepareTournament(id)) return true;
         } else if (action == "withdraw") {
