@@ -129,8 +129,11 @@ App::App(Renderer& r, const Options& o) : renderer(r), options(o), assets(r, o.t
     };
     const auto regularPath = findFace("MiSans-Regular.ttf");
     const auto strongPath = findFace("MiSans-Semibold.ttf");
-    if (!regularPath.empty()) {
-        auto* regular = addFace(regularPath, 1.f);
+    // Either weight is enough on its own: a single face still carries the full Latin
+    // and CJK set, and drawing everything a little heavier beats drawing boxes.
+    const auto bodyPath = regularPath.empty() ? strongPath : regularPath;
+    if (!bodyPath.empty()) {
+        auto* regular = addFace(bodyPath, 1.f);
         auto* strong = strongPath.empty() ? regular : addFace(strongPath, 1.f);
         serif = sans = lato = jost = regular;
         bold = jostBold = strong;
@@ -479,11 +482,24 @@ void App::card(int index, ImVec2 at, ImVec2 size, bool chosen, bool foil, int ow
         d->AddRect(at, at + size, alpha(palette().accent, .25f), 0, 0, 1.2f * scale);
     if (chosen) chosenOutline(at, size);
     const float digitSize = 29 * unit;
+    // Same optical centring as the framed face: a numeral has no descender, so its line
+    // box sits lower than its ink, and all four values share one box.
+    const auto digitInkMiddle = [&](ImFont* font) {
+        auto* baked = font->GetFontBaked(digitSize);
+        float top = 1e5f, bottom = -1e5f;
+        for (ImWchar glyph = '0'; glyph <= '9'; ++glyph)
+            if (const auto* found = baked->FindGlyph(glyph); found && found->Visible) {
+                top = found->Y0 < top ? found->Y0 : top;
+                bottom = found->Y1 > bottom ? found->Y1 : bottom;
+            }
+        return bottom > top ? (top + bottom) * .5f * (digitSize / baked->Size) : digitSize * .5f;
+    };
     const auto number = [&](int side, ImVec2 pos) {
         std::string value = c.sides[side] == 10 ? "A" : std::to_string(c.sides[side]);
         auto* f = cardValueFont ? cardValueFont : bold;
         ImVec2 extent = f->CalcTextSizeA(digitSize, 1e5f, 0, value.c_str());
-        pos -= extent * .5f;
+        pos.x -= extent.x * .5f;
+        pos.y -= digitInkMiddle(f);
         if (face.shadow > 0) {
             const ImVec2 shadow = pos + ImVec2(0, face.shadowOffset * unit);
             const float radius = face.shadowBlur * unit;

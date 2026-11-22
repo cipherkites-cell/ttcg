@@ -189,12 +189,24 @@ void App::framedCard(const CardView& c, Texture texture, ImVec2 at, ImVec2 size,
     if (geometric) valueFont = jostBold;
     const float digit = (printed ? (geometric ? 34.f : 30.f) : (geometric ? 31.f : 26.f)) * unit;
     const ImU32 ink = rgb(0xf8f3e6);
+    // Numerals have no descender, so centring their line box leaves them sitting low.
+    // Anchoring on the ink of the figures, and on one shared box for all of them, keeps
+    // the four values on one optical line whatever font carries them.
+    const auto digitInkMiddle = [&](ImFont* font) {
+        auto* baked = font->GetFontBaked(digit);
+        float top = 1e5f, bottom = -1e5f;
+        for (ImWchar glyph = '0'; glyph <= '9'; ++glyph)
+            if (const auto* found = baked->FindGlyph(glyph); found && found->Visible) {
+                top = found->Y0 < top ? found->Y0 : top;
+                bottom = found->Y1 > bottom ? found->Y1 : bottom;
+            }
+        return bottom > top ? (top + bottom) * .5f * (digit / baked->Size) : digit * .5f;
+    };
     const auto value = [&](int side) {
         const std::string text = c.sides[side] == 10 ? "A" : std::to_string(c.sides[side]);
         const auto extent = valueFont->CalcTextSizeA(digit, 1e5f, 0, text.c_str());
-        // Jost's tall line box leaves its numerals above the middle of it.
         const ImVec2 centre = at + valueAnchor(side, size),
-                     pos = centre - extent * .5f + ImVec2(0, geometric ? digit * .06f : 0);
+                     pos = centre - ImVec2(extent.x * .5f, digitInkMiddle(valueFont));
         if (printed) {
             // A soft dark ground, then a close halo that follows the numeral.
             for (int i = 6; i > 0; --i) d->AddCircleFilled(centre, 17 * unit * i / 6, rgb(0x000000, 16), 28);
