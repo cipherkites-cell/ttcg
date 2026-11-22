@@ -204,24 +204,24 @@ void showPanel(RE::Actor* actor, const std::string& requested) {
         (!actor && target != "album"))
         return;
     if (!api || !uiReady || !api->IsValid(view)) {
-        RE::SendHUDMessage::ShowHUDMessage(std::format("Tessera: {} is unavailable.", ttcg::ui::name).c_str());
+        RE::SendHUDMessage::ShowHUDMessage(std::format("Tessera：{} 不可用。", ttcg::ui::name).c_str());
         return;
     }
     if (api->HasAnyActiveFocus()) {
-        RE::SendHUDMessage::ShowHUDMessage("Close the other menu first.");
+        RE::SendHUDMessage::ShowHUDMessage("请先关闭其他菜单。");
         return;
     }
     campaign::recoverSavedMatch();
     if (campaign::savedMatch.present && target == "shop") {
-        RE::SendHUDMessage::ShowHUDMessage("Finish your interrupted game before trading cards.");
+        RE::SendHUDMessage::ShowHUDMessage("请先结束未完成的对局再换卡。");
         return;
     }
     if (campaign::savedMatch.present && target == "lobby") {
         if (campaign::resumingWith(actor) && resumeMatch()) return;
         RE::SendHUDMessage::ShowHUDMessage(
             (campaign::savedMatch.table.finished()
-                 ? "Open your album and collect your winnings from " + campaign::savedMatchName() + " first."
-                 : "Finish your game with " + campaign::savedMatchName() + " first.")
+                 ? "请先打开相册，从 " + campaign::savedMatchName() + " 处领取你的战利品。"
+                 : "请先结束你与 " + campaign::savedMatchName() + " 的对局。")
                 .c_str());
         return;
     }
@@ -234,7 +234,7 @@ void showPanel(RE::Actor* actor, const std::string& requested) {
     }
     if (target == "lobby" && actor && !campaign::profile(actor) && !campaign::isChild(actor) &&
         !campaign::development.allowAnyNPC) {
-        RE::SendHUDMessage::ShowHUDMessage("They don't play Tessera.");
+        RE::SendHUDMessage::ShowHUDMessage("他们不玩 Tessera。");
         return;
     }
     albumSection = (requested == "tournaments" || requested == "registration") ? "tournaments" : "";
@@ -248,8 +248,8 @@ void showPanel(RE::Actor* actor, const std::string& requested) {
     }
     campaign::syncProgression();
     if (target == "lobby" && !campaign::canChallenge(actor)) {
-        RE::SendHUDMessage::ShowHUDMessage(campaign::hasAlbum() ? "They are unavailable for a game."
-                                                                : "Buy a Tessera Album from a general-goods merchant.");
+        RE::SendHUDMessage::ShowHUDMessage(campaign::hasAlbum() ? "他们现在无法对局。"
+                                                                : "从杂货商人处购买 Tessera 相册。");
         return;
     }
     if (target == "lobby") campaign::acceptChallenge(actor);
@@ -260,7 +260,7 @@ void showPanel(RE::Actor* actor, const std::string& requested) {
         return;
     }
     if (target == "shop" && !campaign::openShop(actor)) {
-        RE::SendHUDMessage::ShowHUDMessage("Card trading is unavailable here.");
+        RE::SendHUDMessage::ShowHUDMessage("此处无法换卡。");
         return;
     }
     opponent = actor ? actor->GetHandle() : RE::ActorHandle{};
@@ -316,12 +316,12 @@ void finishPanelRequest(std::uint64_t token) {
         return;
     }
     if (!actor || actor.get() == player || player->IsDead() || player->IsInCombat()) {
-        reject("player or NPC unavailable", "Tessera is unavailable right now.");
+        reject("player or NPC unavailable", "Tessera 暂不可用。");
         return;
     }
     if (actor->GetParentCell() != player->GetParentCell() ||
         actor->GetPosition().GetDistance(player->GetPosition()) >= 600.f) {
-        reject("NPC moved out of reach", "They are too far away. Speak to them again.");
+        reject("NPC moved out of reach", "他们离得太远，请走近后再次对话。");
         return;
     }
     const auto actorBlock = campaign::actorCardBlock(actor.get());
@@ -332,11 +332,11 @@ void finishPanelRequest(std::uint64_t token) {
                              : actorBlock == campaign::ActorCardBlock::Disabled      ? "NPC disabled"
                              : actorBlock == campaign::ActorCardBlock::ChildDialogue ? "child dialogue/quest gate"
                                                                                      : "ineligible actor";
-        reject(reason, "They are unavailable for Tessera right now.");
+        reject(reason, "他们现在无法进行 Tessera。");
         return;
     }
     if (!api || !uiReady || !api->IsValid(view)) {
-        reject("native UI unavailable", "Tessera's interface is unavailable.");
+        reject("native UI unavailable", "Tessera 界面不可用。");
         return;
     }
     std::string reason;
@@ -362,8 +362,8 @@ void finishPanelRequest(std::uint64_t token) {
     if (step == ttcg::PanelOpenRequest::Step::Expired) {
         reject(reason.empty() ? "menu transition timed out" : reason.c_str(),
                reason == "NPC scene" || reason == "player scene"
-                   ? "They are busy. Try speaking to them again in a moment."
-                   : "Tessera couldn't open. Please try again.");
+                   ? "他们正忙，请稍后再试着对话。"
+                   : "Tessera 未能打开，请重试。");
         return;
     }
     if (step != ttcg::PanelOpenRequest::Step::Open) return;
@@ -413,19 +413,19 @@ void requestChallenge(RE::Actor* actor) {
     if (!campaign::interfaceSettings.gamesEnabled || !eligible(actor) || visible) return;
     campaign::syncProgression();
     if (!campaign::hasAlbum()) {
-        RE::SendHUDMessage::ShowHUDMessage("Buy a Tessera Album from a general-goods merchant.");
+        RE::SendHUDMessage::ShowHUDMessage("从杂货商人处购买 Tessera 相册。");
         return;
     }
     const auto i = campaign::profileIndex(actor);
     if (!(campaign::resumingWith(actor) || campaign::isChild(actor) ||
           (i >= 0 ? campaign::unlocked(i) : actor && campaign::development.allowAnyNPC))) {
-        RE::SendHUDMessage::ShowHUDMessage("They are unavailable for a game.");
+        RE::SendHUDMessage::ShowHUDMessage("他们现在无法对局。");
         return;
     }
     if (i >= 0 && ttcg::opponents[i].dynamic) {
         const int ready = campaign::npcAvailability(actor);
         if (!ready) {
-            RE::SendHUDMessage::ShowHUDMessage("They are unavailable for a game.");
+            RE::SendHUDMessage::ShowHUDMessage("他们现在无法对局。");
             return;
         }
         auto info = campaign::npcResponse(actor, ready);
@@ -433,14 +433,14 @@ void requestChallenge(RE::Actor* actor) {
             if (info->objConditions.IsTrue(actor, RE::PlayerCharacter::GetSingleton()))
                 actor->SetDialogueWithPlayer(true, true, info);
             else
-                RE::SendHUDMessage::ShowHUDMessage("They are unavailable for a game.");
+                RE::SendHUDMessage::ShowHUDMessage("他们现在无法对局。");
             return;
         }
         if (ready == 1) {
             requestPanel(actor);
         } else
-            RE::SendHUDMessage::ShowHUDMessage(ready == 3 ? "They don't have enough cards for a game."
-                                                          : "They don't want to play right now.");
+            RE::SendHUDMessage::ShowHUDMessage(ready == 3 ? "他们的卡不够开一局。"
+                                                          : "他们现在不想玩。");
         return;
     }
     const bool accepted =

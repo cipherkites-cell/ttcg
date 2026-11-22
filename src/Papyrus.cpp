@@ -236,11 +236,11 @@ void buyAlbumPapyrus(RE::StaticFunctionTag*, RE::Actor* actor) {
         if (!merchant) return;
         const bool bought = campaign::buyAlbum(merchant.get());
         const char* message =
-            bought                 ? "Your Tessera Album includes eight starter cards."
-            : campaign::hasAlbum() ? "You already own a Tessera Album."
+            bought                 ? "你的 Tessera 相册里已有八张起始卡。"
+            : campaign::hasAlbum() ? "你已经拥有一本 Tessera 相册。"
             : campaign::physicalCount(RE::PlayerCharacter::GetSingleton(), campaign::goldForm) < ttcg::albumPrice
-                ? "You need 100 gold to buy a Tessera Album."
-                : "The album purchase could not be completed.";
+                ? "购买 Tessera 相册需要 100 金币。"
+                : "相册购买未能完成。";
         RE::SendHUDMessage::ShowHUDMessage(message);
         if (spdlog::should_log(spdlog::level::debug))
             log::debug("Album purchase callback: {} ({:08X}), eligible {}, success {}", merchant->GetName(),

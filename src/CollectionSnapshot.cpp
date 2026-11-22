@@ -138,8 +138,8 @@ std::string json(RE::Actor* actor, bool, bool conceal) {
     out.pop_back();
     out += ",\"playUnavailableReason\":" +
            ttcg::quote(playReason.empty() && !ready ? (p && p->traveller && !ttcg::encounterReady(saved, i, gameHour())
-                                                           ? "M'aiq has played enough for now."
-                                                           : "They are unavailable for another game.")
+                                                           ? "迈齐今天已经玩够了。"
+                                                           : "他们现在无法再来一局。")
                                                     : playReason);
     out += ",\"fixedWager\":" + std::to_string(fixedWager());
     out += ",\"firstMove\":" + std::to_string(actor ? firstMove : -1);

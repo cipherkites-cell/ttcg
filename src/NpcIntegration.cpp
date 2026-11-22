@@ -80,36 +80,36 @@ void logNpcDependencies() {
 }
 std::string npcEligibilityReason(RE::Actor* actor, bool automatic) {
     const ttcg::NpcSyncWorkScope timing(ttcg::NpcSyncWork::Integration);
-    if (!actor || actor == RE::PlayerCharacter::GetSingleton()) return "Face a nearby resident.";
+    if (!actor || actor == RE::PlayerCharacter::GetSingleton()) return "面对附近的居民。";
     auto base = actor->GetActorBase();
-    if (!base || !actor->GetRace()) return "No stable NPC identity.";
+    if (!base || !actor->GetRace()) return "无法确定该 NPC 的身份。";
     // Dialogue flags and a voice type also occur on pets. Use Skyrim's NPC
     // classification, independently of voice origin or authored enrollment.
     if (!ttcg::measureNpcSync(ttcg::NpcSyncWork::Humanoid, [&] { return actor->IsHumanoid(); }))
-        return "Only humanoid residents can play Tessera.";
-    if (actor->IsChild()) return "Children use the practice roster.";
+        return "只有人形居民能玩 Tessera。";
+    if (actor->IsChild()) return "儿童使用练习名单。";
     const auto id = persistentID(base);
-    if (ttcg::excludedNpc(id)) return "Excluded by an opponent integration.";
+    if (ttcg::excludedNpc(id)) return "已被某个对手集成排除。";
     if (!base->IsUnique() || base->Respawns() || !actor->IsPersistent() || actor->GetFormID() >> 24 == 0xFF)
-        return "Requires a unique, persistent resident.";
+        return "需要一个唯一且持久的居民。";
     if (actor->IsDead() || actor->IsDisabled() || ttcg::measureNpcSync(ttcg::NpcSyncWork::Hostility, [&] {
             return actor->IsHostileToActor(RE::PlayerCharacter::GetSingleton());
         }))
-        return "They are unavailable for games.";
-    if (actor->IsSummoned() || actor->IsReanimated() || actor->IsGhost()) return "This actor is not a resident.";
+        return "他们现在无法对局。";
+    if (actor->IsSummoned() || actor->IsReanimated() || actor->IsGhost()) return "该角色不是居民。";
     if (!actor->GetRace()->AllowsPCDialogue() || !base->GetVoiceType())
-        return "This NPC does not support ordinary dialogue.";
+        return "该 NPC 不支持普通对话。";
     const auto voiceFile = base->GetVoiceType()->GetFile(0);
     if (!ttcg::residentVoiceAllowed(voiceFile ? voiceFile->GetFilename() : "", ttcg::opponentDefinition(id) != nullptr,
                                     interfaceSettings.vanillaVoicesOnly))
-        return "This NPC uses a custom voice. Turn off Vanilla voices only in Settings or install an authored Tessera profile.";
+        return "该 NPC 使用自定义语音。请在设置里关闭“仅原版语音”，或安装对应的 Tessera 对手档案。";
     const std::string name = actor->GetName();
-    if (name.empty() || name.size() > 128) return "This NPC needs a name.";
+    if (name.empty() || name.size() > 128) return "该 NPC 需要有一个名字。";
     if (automatic) {
         const auto file = base->GetFile(0);
         const auto master = file ? ttcg::normalizedPlugin(file->GetFilename()) : "";
         if (master.empty() || ttcg::vanillaPlugin(master))
-            return "Vanilla residents require an authored profile or manual enrollment.";
+            return "原版居民需要对手档案或手动登记。";
     }
     return {};
 }
@@ -372,20 +372,20 @@ bool canEnrollNpc(RE::Actor* actor) {
     return !d || (d->enabled && npcDefinitionAvailable(*d) && npcGatesMet(actor, d->gates));
 }
 std::string npcInspector(RE::Actor* actor) {
-    if (!actor) return "Face a nearby resident to add them.";
+    if (!actor) return "面对附近的居民即可添加。";
     if (!actor->IsHumanoid()) return npcEligibilityReason(actor, false);
     const int i = profileIndex(actor);
     if (i >= 0) {
         if (ttcg::opponents[i].dynamic && ttcg::opponents[i].automatic && interfaceSettings.residents == 0)
-            return std::string("Keep ") + actor->GetName() + " available with automatic players turned off.";
+            return std::string("关闭自动玩家后，才能让 ") + actor->GetName() + " 保持可用。";
         return std::string(actor->GetName()) + " already plays Tessera.";
     }
     auto reason = npcEligibilityReason(actor, false);
     if (!reason.empty()) return reason;
     const auto* d = ttcg::opponentDefinition(persistentID(actor->GetActorBase()));
-    if (d && !npcDefinitionAvailable(*d)) return "Their opponent integration has missing requirements.";
-    if (d && (!d->enabled || !npcGatesMet(actor, d->gates))) return "Their quest requirements have not been met.";
-    if (!npcTemporarilyReady(actor)) return "They are busy or unavailable.";
-    return std::string("Add ") + actor->GetName() + " as a Tessera player.";
+    if (d && !npcDefinitionAvailable(*d)) return "其对手集成缺少必要文件。";
+    if (d && (!d->enabled || !npcGatesMet(actor, d->gates))) return "其任务条件尚未满足。";
+    if (!npcTemporarilyReady(actor)) return "他们正忙或暂时无法抽身。";
+    return std::string("把 ") + actor->GetName() + " 添加为 Tessera 玩家。";
 }
 }

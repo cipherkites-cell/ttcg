@@ -234,7 +234,7 @@ void complete(RE::StaticFunctionTag*, RE::TESQuest* q, int serial, RE::Actor* ac
         }
         publish();
         const auto v = snapshot(q);
-        std::string body = "Give one standard " + v.requestName + " to " + a->GetName() + " for " + v.rewardName + "?";
+        std::string body = "用一张普通“" + v.requestName + "”和 " + a->GetName() + " 换“" + v.rewardName + "”？";
         if (warnings & ttcg::ShopDeck) body += "\n\nThis copy is used in a saved deck. Its slot will be cleared.";
         if (warnings & ttcg::ShopLastHand) body += "\n\nYou will have fewer than five playable cards.";
         RE::BSTSmartPointer<RE::IMessageBoxCallback> callback(new Confirm());

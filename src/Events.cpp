@@ -129,7 +129,7 @@ public:
             event->newContainer == 0x14 && event->itemCount > 0) {
             collectionIntegration::queue([]() {
                 if (campaign::claimAlbum())
-                    RE::SendHUDMessage::ShowHUDMessage("Your Tessera Album includes eight starter cards.");
+                    RE::SendHUDMessage::ShowHUDMessage("你的 Tessera 相册里已有八张起始卡。");
             });
         }
         return RE::BSEventNotifyControl::kContinue;
@@ -152,7 +152,7 @@ public:
                     auto ui = RE::UI::GetSingleton();
                     if (!ui || ui->GameIsPaused() || ui->IsMenuOpen(RE::MainMenu::MENU_NAME)) return;
                     if (campaign::interfaceSettings.gamesEnabled && !campaign::hasAlbum()) {
-                        RE::SendHUDMessage::ShowHUDMessage("Buy a Tessera Album from a general-goods merchant.");
+                        RE::SendHUDMessage::ShowHUDMessage("从杂货商人处购买 Tessera 相册。");
                         return;
                     }
                     showPanel(nullptr, "album");
@@ -172,7 +172,7 @@ public:
                     auto ref = pick ? pick->GetActiveTarget().get() : RE::NiPointer<RE::TESObjectREFR>{};
                     auto actor = ref ? ref->As<RE::Actor>() : nullptr;
                     if (!eligible(actor)) {
-                        RE::SendHUDMessage::ShowHUDMessage("Face a nearby NPC to challenge them.");
+                        RE::SendHUDMessage::ShowHUDMessage("面对附近的 NPC 即可发起挑战。");
                         return;
                     }
                     requestChallenge(actor);
@@ -358,7 +358,7 @@ void message(SKSE::MessagingInterface::Message* msg) {
                 collectionIntegration::activate();
                 if (!campaign::saveValid)
                     RE::DebugMessageBox(
-                        "Tessera can't read its data in this save. The save comes from a newer version of Tessera, or the data is damaged.\n\nTessera stays off for this save and keeps the data unchanged. Update Tessera to play again.");
+                        "Tessera 无法读取此存档中的数据：存档来自更新版本的 Tessera，或数据已损坏。\n\n本次 Tessera 保持关闭，不会改动数据。更新 Tessera 后即可继续游戏。");
             });
         }
         log::debug("{}: cleanup complete", name);

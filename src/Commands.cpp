@@ -10,7 +10,7 @@ bool persistInterfaceSetting(const char* section, const char* key, int value) {
 }
 bool setGamesEnabled(bool enabled) {
     if (!campaign::interfaceSettings.set("games", enabled, persistInterfaceSetting)) {
-        interfaceNotice = "Couldn't save this setting.";
+        interfaceNotice = "设置保存失败。";
         if (visible)
             publish();
         else
@@ -23,7 +23,7 @@ bool setGamesEnabled(bool enabled) {
         cancelPanelRequest();
         if (active) {
             close(false);
-            RE::SendHUDMessage::ShowHUDMessage("Tessera disabled. Your game is saved to resume later.");
+            RE::SendHUDMessage::ShowHUDMessage("已关闭 Tessera。当前对局已保存，可稍后继续。");
             return true;
         }
         if (visible && (screen != "album" || challengeContext)) {
@@ -45,7 +45,7 @@ bool setGamesEnabled(bool enabled) {
     if (visible)
         publish();
     else
-        RE::SendHUDMessage::ShowHUDMessage(enabled ? "Tessera enabled." : "Tessera disabled.");
+        RE::SendHUDMessage::ShowHUDMessage(enabled ? "已开启 Tessera。" : "已关闭 Tessera。");
     return true;
 }
 bool validCommandSize(std::string_view text) { return text.size() <= (text.starts_with("cardback ") ? 2048u : 128u); }
@@ -67,8 +67,8 @@ void command(const char* raw) {
             if (!resumeMatch()) {
                 if (campaign::savedMatch.present)
                     campaign::notice = campaign::savedMatch.tournament
-                                           ? "Return to the tournament inn to resume."
-                                           : "Return to " + campaign::savedMatchName() + " to resume.";
+                                           ? "回到锦标赛旅店即可继续。"
+                                           : "回到" + campaign::savedMatchName() + "继续。";
                 ++revision;
                 publish();
             }
@@ -98,7 +98,7 @@ void command(const char* raw) {
             if (active || thinking || settling) return;
             interfaceNotice = campaign::interfaceSettings.set(key, value, persistInterfaceSetting)
                                   ? ""
-                                  : "Couldn't save this setting.";
+                                  : "设置保存失败。";
             campaign::registerNearbyNpcs();
             campaign::syncProgression();
             publish();
@@ -148,7 +148,7 @@ void command(const char* raw) {
                                                    : campaign::development.clearCollection(campaign::saved, persist);
             if (!changed) {
                 campaign::notice =
-                    "Couldn't save the development settings. Your Tessera progress has not been changed.";
+                    "开发者设置保存失败，Tessera 进度未作改动。";
                 publish();
                 return;
             }
@@ -185,10 +185,10 @@ void command(const char* raw) {
         campaign::prepare(opponent.get().get(), action == "reset");
         campaign::syncProgression();
         campaign::notice = action == "reset"
-                               ? (itemsRemoved ? "Tessera reset. Your album has eight starter cards and a starter deck."
-                                               : "Tessera reset. Some packs or old invitations could not be removed.")
-                           : action == "clear" ? "Collection cleared. Collect new cards from packs, shops and games."
-                                               : "Unavailable cards removed from your collection and decks.";
+                               ? (itemsRemoved ? "已重置 Tessera。相册里已有八张起始卡与一套起始牌组。"
+                                               : "已重置 Tessera。部分卡包或旧邀请函未能移除。")
+                           : action == "clear" ? "收藏已清空，可通过卡包、商店和对局重新收集。"
+                                               : "已从收藏和牌组中移除不可用的卡。";
         log::info("Collection recovery: {}", action);
         match = ttcg::Match(1, campaign::sessionRules);
         ++revision;
@@ -206,27 +206,27 @@ void command(const char* raw) {
         if (key == "rank-finish-reset" && value == 0) {
             interfaceNotice = campaign::interfaceSettings.resetRankFinish(persistInterfaceSetting)
                                   ? ""
-                                  : "Couldn't save every setting.";
+                                  : "部分设置保存失败。";
             publish();
             return;
         }
         if (key == "match-appearance-reset" && value == 0) {
             interfaceNotice = campaign::interfaceSettings.resetMatchAppearance(persistInterfaceSetting)
                                   ? ""
-                                  : "Couldn't save every setting.";
+                                  : "部分设置保存失败。";
             publish();
             return;
         }
         if (ttcg::InterfaceSettings::find(key)) {
             interfaceNotice = campaign::interfaceSettings.set(key, value, persistInterfaceSetting)
                                   ? ""
-                                  : "Couldn't save this setting.";
+                                  : "设置保存失败。";
             publish();
             return;
         }
         if (option == pauseOptions.end() || (value != 0 && value != 1)) return;
         if (!WritePrivateProfileStringW(L"Interface", option->iniKey, value ? L"1" : L"0", settingsPath.c_str())) {
-            interfaceNotice = "Couldn't save this setting.";
+            interfaceNotice = "设置保存失败。";
             publish();
             return;
         }
@@ -292,7 +292,7 @@ void command(const char* raw) {
                     return WritePrivateProfileStringW(L"Development", wide.c_str(), std::to_wstring(number).c_str(),
                                                       settingsPath.c_str()) != 0;
                 })) {
-                developmentNotice = "Couldn't save this setting.";
+                developmentNotice = "设置保存失败。";
                 publish();
                 return;
             }
@@ -304,9 +304,9 @@ void command(const char* raw) {
             const auto added = campaign::development.addMissingCards(campaign::saved, action == "foils");
             if (added < 0) return;
             developmentNotice =
-                added ? std::format("Added {} {} to your album.", added, action == "foils" ? "foils" : "cards")
-                : action == "foils" ? "Your album already has every foil."
-                                    : "Your album already has every card.";
+                added ? std::format("已向相册添加 {} {}。", added, action == "foils" ? "张闪卡" : "张卡")
+                : action == "foils" ? "相册里已经拥有全部闪卡。"
+                                    : "相册里已经拥有全部卡牌。";
             campaign::ensureAlbum();
             log::info("Development: {}", developmentNotice);
         } else
@@ -351,17 +351,17 @@ void command(const char* raw) {
             return;
         if (input >> extra) return;
         if (!ttcg::validHotkey(value)) {
-            bindingNotice = "Choose a different key.";
+            bindingNotice = "请换一个按键。";
             publish();
             return;
         }
         if (const auto conflict = hotkeys.conflict(field, value); !conflict.empty()) {
-            bindingNotice = "Already used for " + std::string(conflict) + ".";
+            bindingNotice = "已被“" + std::string(conflict) + "”占用。";
             publish();
             return;
         }
         if (!WritePrivateProfileStringW(L"Input", setting->ini, std::to_wstring(value).c_str(), settingsPath.c_str())) {
-            bindingNotice = "Couldn't save the key.";
+            bindingNotice = "按键保存失败。";
             publish();
             return;
         }
@@ -523,7 +523,7 @@ void command(const char* raw) {
     if (verb == "open-pack") {
         if ((input >> extra) || active || campaign::savedMatch.present || screen != "album") return;
         const auto seed = static_cast<std::uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count());
-        campaign::notice = campaign::openPack(seed) ? "" : "Pack unavailable.";
+        campaign::notice = campaign::openPack(seed) ? "" : "卡包不可用。";
         ++revision;
         publish();
         return;
@@ -580,7 +580,7 @@ void command(const char* raw) {
         log::info("Rematch requested: session {}, revision {}, settling {}, thinking {}, pending {}", session, revision,
                   settling, thinking, campaign::saved.contract.pending());
         if (settling || thinking || (active && !match.finished()) || campaign::saved.contract.pending()) {
-            campaign::notice = "The previous game is still finishing.";
+            campaign::notice = "上一局仍在结算中。";
             publish();
             return;
         }
@@ -759,12 +759,12 @@ void command(const char* raw) {
             return;
         auto stock = campaign::inventory(RE::PlayerCharacter::GetSingleton());
         if (ttcg::playableCount(stock) < 5) {
-            campaign::notice = "You need five cards.";
+            campaign::notice = "你需要五张卡。";
             publish();
             return;
         }
         if (!ttcg::validHand(deck, stock)) {
-            campaign::notice = "Choose five cards you own.";
+            campaign::notice = "请选择五张你拥有的卡。";
             publish();
             return;
         }
@@ -776,7 +776,7 @@ void command(const char* raw) {
             const auto* e = ttcg::tournament(campaign::saved, campaign::tournamentID);
             if (!e || campaign::tournamentVenue() != e->hold ||
                 !ttcg::startTournamentRound(campaign::saved, campaign::tournamentID, campaign::gameHour())) {
-                campaign::notice = "This tournament round is unavailable.";
+                campaign::notice = "该锦标赛轮次不可用。";
                 ++revision;
                 publish();
                 return;
@@ -785,7 +785,7 @@ void command(const char* raw) {
         campaign::Bank bank(campaign::persistentID(actor.get()));
         if (tradeRule || wager) {
             if (!campaign::canStake || !ttcg::validHand(campaign::rivalDeck, campaign::inventory(actor.get()))) {
-                campaign::notice = "They don't have enough cards for a game.";
+                campaign::notice = "他们的卡不够开一局。";
                 publish();
                 return;
             }
@@ -798,7 +798,7 @@ void command(const char* raw) {
                     ttcg::validHand(deck, campaign::inventory(RE::PlayerCharacter::GetSingleton())),
                     ttcg::validHand(campaign::rivalDeck, campaign::inventory(actor.get())),
                     campaign::saved.contract.pending());
-                campaign::notice = "Cards or gold unavailable.";
+                campaign::notice = "卡牌或金币不可用。";
                 publish();
                 return;
             }
