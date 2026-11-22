@@ -60,7 +60,7 @@ jobs:
 
   windows:
     name: Windows DLL and packages
-    runs-on: windows-2025
+    runs-on: windows-2022
     timeout-minutes: 60
     outputs:
       version: ${{ steps.version.outputs.version }}
