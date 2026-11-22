@@ -6,6 +6,8 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "CreatureGroups.h"
+
 namespace ttcg {
 
 // Display-only Chinese labels for the built-in card vocabulary.
@@ -867,3 +869,4 @@ inline std::string_view zhRoute(std::string_view value) {
 }
 
 } // namespace ttcg
+//（注：内容由AI生成）
