@@ -361,9 +361,8 @@ void finishPanelRequest(std::uint64_t token) {
     const auto step = panelOpenRequest.poll(token, now, !reason.empty());
     if (step == ttcg::PanelOpenRequest::Step::Expired) {
         reject(reason.empty() ? "menu transition timed out" : reason.c_str(),
-               reason == "NPC scene" || reason == "player scene"
-                   ? "他们正忙，请稍后再试着对话。"
-                   : "Tessera 未能打开，请重试。");
+               reason == "NPC scene" || reason == "player scene" ? "他们正忙，请稍后再试着对话。"
+                                                                 : "Tessera 未能打开，请重试。");
         return;
     }
     if (step != ttcg::PanelOpenRequest::Step::Open) return;
@@ -439,8 +438,7 @@ void requestChallenge(RE::Actor* actor) {
         if (ready == 1) {
             requestPanel(actor);
         } else
-            RE::SendHUDMessage::ShowHUDMessage(ready == 3 ? "他们的卡不够开一局。"
-                                                          : "他们现在不想玩。");
+            RE::SendHUDMessage::ShowHUDMessage(ready == 3 ? "他们的卡不够开一局。" : "他们现在不想玩。");
         return;
     }
     const bool accepted =

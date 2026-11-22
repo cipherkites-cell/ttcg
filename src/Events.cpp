@@ -128,8 +128,7 @@ public:
         if (event && campaign::albumForm && event->baseObj == campaign::albumForm->GetFormID() &&
             event->newContainer == 0x14 && event->itemCount > 0) {
             collectionIntegration::queue([]() {
-                if (campaign::claimAlbum())
-                    RE::SendHUDMessage::ShowHUDMessage("你的 Tessera 相册里已有八张起始卡。");
+                if (campaign::claimAlbum()) RE::SendHUDMessage::ShowHUDMessage("你的 Tessera 相册里已有八张起始卡。");
             });
         }
         return RE::BSEventNotifyControl::kContinue;

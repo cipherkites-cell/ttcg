@@ -97,8 +97,7 @@ std::string npcEligibilityReason(RE::Actor* actor, bool automatic) {
         }))
         return "他们现在无法对局。";
     if (actor->IsSummoned() || actor->IsReanimated() || actor->IsGhost()) return "该角色不是居民。";
-    if (!actor->GetRace()->AllowsPCDialogue() || !base->GetVoiceType())
-        return "该 NPC 不支持普通对话。";
+    if (!actor->GetRace()->AllowsPCDialogue() || !base->GetVoiceType()) return "该 NPC 不支持普通对话。";
     const auto voiceFile = base->GetVoiceType()->GetFile(0);
     if (!ttcg::residentVoiceAllowed(voiceFile ? voiceFile->GetFilename() : "", ttcg::opponentDefinition(id) != nullptr,
                                     interfaceSettings.vanillaVoicesOnly))
@@ -108,8 +107,7 @@ std::string npcEligibilityReason(RE::Actor* actor, bool automatic) {
     if (automatic) {
         const auto file = base->GetFile(0);
         const auto master = file ? ttcg::normalizedPlugin(file->GetFilename()) : "";
-        if (master.empty() || ttcg::vanillaPlugin(master))
-            return "原版居民需要对手档案或手动登记。";
+        if (master.empty() || ttcg::vanillaPlugin(master)) return "原版居民需要对手档案或手动登记。";
     }
     return {};
 }

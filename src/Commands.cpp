@@ -66,9 +66,8 @@ void command(const char* raw) {
         if (action == "resume") {
             if (!resumeMatch()) {
                 if (campaign::savedMatch.present)
-                    campaign::notice = campaign::savedMatch.tournament
-                                           ? "回到锦标赛旅店即可继续。"
-                                           : "回到" + campaign::savedMatchName() + "继续。";
+                    campaign::notice = campaign::savedMatch.tournament ? "回到锦标赛旅店即可继续。"
+                                                                       : "回到" + campaign::savedMatchName() + "继续。";
                 ++revision;
                 publish();
             }
@@ -96,9 +95,8 @@ void command(const char* raw) {
         }
         if (key == "residents" || key == "vanilla-voices") {
             if (active || thinking || settling) return;
-            interfaceNotice = campaign::interfaceSettings.set(key, value, persistInterfaceSetting)
-                                  ? ""
-                                  : "设置保存失败。";
+            interfaceNotice =
+                campaign::interfaceSettings.set(key, value, persistInterfaceSetting) ? "" : "设置保存失败。";
             campaign::registerNearbyNpcs();
             campaign::syncProgression();
             publish();
@@ -147,8 +145,7 @@ void command(const char* raw) {
             const bool changed = action == "reset" ? campaign::development.resetTessera(campaign::saved, persist)
                                                    : campaign::development.clearCollection(campaign::saved, persist);
             if (!changed) {
-                campaign::notice =
-                    "开发者设置保存失败，Tessera 进度未作改动。";
+                campaign::notice = "开发者设置保存失败，Tessera 进度未作改动。";
                 publish();
                 return;
             }
@@ -184,9 +181,8 @@ void command(const char* raw) {
             return;
         campaign::prepare(opponent.get().get(), action == "reset");
         campaign::syncProgression();
-        campaign::notice = action == "reset"
-                               ? (itemsRemoved ? "已重置 Tessera。相册里已有八张起始卡与一套起始牌组。"
-                                               : "已重置 Tessera。部分卡包或旧邀请函未能移除。")
+        campaign::notice = action == "reset"   ? (itemsRemoved ? "已重置 Tessera。相册里已有八张起始卡与一套起始牌组。"
+                                                               : "已重置 Tessera。部分卡包或旧邀请函未能移除。")
                            : action == "clear" ? "收藏已清空，可通过卡包、商店和对局重新收集。"
                                                : "已从收藏和牌组中移除不可用的卡。";
         log::info("Collection recovery: {}", action);
@@ -204,23 +200,20 @@ void command(const char* raw) {
         const auto option = std::find_if(pauseOptions.begin(), pauseOptions.end(),
                                          [&](const auto& entry) { return entry.command == key; });
         if (key == "rank-finish-reset" && value == 0) {
-            interfaceNotice = campaign::interfaceSettings.resetRankFinish(persistInterfaceSetting)
-                                  ? ""
-                                  : "部分设置保存失败。";
+            interfaceNotice =
+                campaign::interfaceSettings.resetRankFinish(persistInterfaceSetting) ? "" : "部分设置保存失败。";
             publish();
             return;
         }
         if (key == "match-appearance-reset" && value == 0) {
-            interfaceNotice = campaign::interfaceSettings.resetMatchAppearance(persistInterfaceSetting)
-                                  ? ""
-                                  : "部分设置保存失败。";
+            interfaceNotice =
+                campaign::interfaceSettings.resetMatchAppearance(persistInterfaceSetting) ? "" : "部分设置保存失败。";
             publish();
             return;
         }
         if (ttcg::InterfaceSettings::find(key)) {
-            interfaceNotice = campaign::interfaceSettings.set(key, value, persistInterfaceSetting)
-                                  ? ""
-                                  : "设置保存失败。";
+            interfaceNotice =
+                campaign::interfaceSettings.set(key, value, persistInterfaceSetting) ? "" : "设置保存失败。";
             publish();
             return;
         }
@@ -303,10 +296,10 @@ void command(const char* raw) {
             if (input >> extra) return;
             const auto added = campaign::development.addMissingCards(campaign::saved, action == "foils");
             if (added < 0) return;
-            developmentNotice =
-                added ? std::format("已向相册添加 {} {}。", added, action == "foils" ? "张闪卡" : "张卡")
-                : action == "foils" ? "相册里已经拥有全部闪卡。"
-                                    : "相册里已经拥有全部卡牌。";
+            developmentNotice = added
+                                    ? std::format("已向相册添加 {} {}。", added, action == "foils" ? "张闪卡" : "张卡")
+                                : action == "foils" ? "相册里已经拥有全部闪卡。"
+                                                    : "相册里已经拥有全部卡牌。";
             campaign::ensureAlbum();
             log::info("Development: {}", developmentNotice);
         } else

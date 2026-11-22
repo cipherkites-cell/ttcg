@@ -165,9 +165,8 @@ bool prepare(RE::Actor* actor, bool resetTerms) {
     recover();
     if (savedMatch.present) {
         if (actor) {
-            notice = savedMatch.table.finished()
-                         ? "请先打开相册，从 " + savedMatchName() + " 处领取你的战利品。"
-                         : "请先结束你与 " + savedMatchName() + " 的对局。";
+            notice = savedMatch.table.finished() ? "请先打开相册，从 " + savedMatchName() + " 处领取你的战利品。"
+                                                 : "请先结束你与 " + savedMatchName() + " 的对局。";
             return false;
         }
         owned = inventory(RE::PlayerCharacter::GetSingleton());
