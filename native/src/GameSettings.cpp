@@ -1,4 +1,5 @@
 #include "GameApp.h"
+#include "ChineseText.h"
 #include <cmath>
 #include <cstdio>
 #include <numbers>
@@ -8,7 +9,7 @@
 namespace preview {
 namespace {
 std::string keyLabel(unsigned binding) {
-    if (!binding) return "Unbound";
+    if (!binding) return "未绑定";
     std::string text;
     for (auto [mask, name] : std::array<std::pair<unsigned, const char*>, 6>{
              {{256, "LShift"}, {512, "RShift"}, {1024, "LCtrl"}, {2048, "RCtrl"}, {4096, "LAlt"}, {8192, "RAlt"}}})
@@ -24,7 +25,7 @@ std::string keyLabel(unsigned binding) {
     }
 #endif
     if (scan >= 59 && scan <= 68) return text + "F" + std::to_string(scan - 58);
-    return text + "Key " + std::to_string(scan);
+    return text + "按键 " + std::to_string(scan);
 }
 }
 void GameApp::matchAppearancePreview(ImVec2 at, ImVec2 size) {
@@ -51,14 +52,14 @@ void GameApp::matchAppearancePreview(ImVec2 at, ImVec2 size) {
     }
     if (sample < 0) return;
     const auto handAt = at + ImVec2(left, 76 * scale);
-    text(at + ImVec2(size.x * .5f, 0), "Hand", 18, palette().muted, 0, true);
+    text(at + ImVec2(size.x * .5f, 0), "手牌", 18, palette().muted, 0, true);
     for (int owner = 0; owner < 2; ++owner) {
         const auto p = handAt + ImVec2(owner * (w + gap), 0);
-        text(p + ImVec2(w * .5f, -33 * scale), owner ? "Opponent" : "You", 18, controlColour(owner, true), 0, true);
+        text(p + ImVec2(w * .5f, -33 * scale), owner ? "对手" : "你", 18, controlColour(owner, true), 0, true);
         card(sample, p, ImVec2(w, h), false, false, owner, MaterialSlot::appearance + owner, false, CardContext::Hand);
     }
     const auto boardAt = handAt + ImVec2(0, h + 82 * scale);
-    text(boardAt + ImVec2(w + gap * .5f, -39 * scale), "Board", 18, palette().muted, 0, true);
+    text(boardAt + ImVec2(w + gap * .5f, -39 * scale), "牌桌", 18, palette().muted, 0, true);
     const auto material = number(member(state, "settings"), "boardSurface");
     boardSurface(material, boardAt - ImVec2(7, 7) * scale, ImVec2(2 * w + gap, h) + ImVec2(14, 14) * scale);
     card(sample, boardAt, ImVec2(w, h), false, false, 0, MaterialSlot::appearance + 2, false, CardContext::Board);
@@ -81,10 +82,10 @@ void GameApp::matchAppearancePreview(ImVec2 at, ImVec2 size) {
     for (int v = first; v < d->VtxBuffer.Size; ++v)
         d->VtxBuffer[v].pos.x = cardAt.x + w * .5f + (d->VtxBuffer[v].pos.x - cardAt.x - w * .5f) * fold;
     const auto controls = boardAt + ImVec2(0, h + 27 * scale);
-    if (button("preview-capture", previewOwner ? "Capture" : "Return", controls, ImVec2(2 * w + gap, 36 * scale), false,
+    if (button("preview-capture", previewOwner ? "夺牌" : "还牌", controls, ImVec2(2 * w + gap, 36 * scale), false,
                previewCapturedAt < 0))
         previewCapturedAt = ImGui::GetTime();
-    if (button("preview-next-art", "Change card", controls + ImVec2(0, 48 * scale), ImVec2(2 * w + gap, 36 * scale))) {
+    if (button("preview-next-art", "换一张卡", controls + ImVec2(0, 48 * scale), ImVec2(2 * w + gap, 36 * scale))) {
         for (int i = 0; i < int(collection.cards.size()); ++i) {
             selected = (sample + 1 + i) % int(collection.cards.size());
             if (known(selected)) break;
@@ -97,7 +98,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
     const float nav = AlbumLayout::navigation * scale, gap = AlbumLayout::gap * scale;
     const bool developer = flag(dev, "enabled");
     if (settingsPage == 3 && !developer) settingsPage = 0;
-    const char* names[]{"Appearance", "Controls", "Gameplay", "Developer"};
+    const char* names[]{"外观", "操作", "玩法", "开发者"};
     for (int i = 0; i < (developer ? 4 : 3); ++i)
         if (chapter(names[i], names[i], at + ImVec2(0, i * 47 * scale), ImVec2(nav - 20 * scale, 43 * scale),
                     settingsPage == i))
@@ -108,10 +109,10 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
     const auto origin = at + ImVec2(nav + gap, 0);
     text(origin, names[settingsPage], 32, palette().ink);
     if (settingsPage == 0) {
-        if (sectionTab("appearance-general", "General", origin + ImVec2(area - 198 * scale, 0), ImVec2(90, 40) * scale,
+        if (sectionTab("appearance-general", "常规", origin + ImVec2(area - 198 * scale, 0), ImVec2(90, 40) * scale,
                        appearancePage == 0))
             appearancePage = 0;
-        if (sectionTab("appearance-match", "Match", origin + ImVec2(area - 98 * scale, 0), ImVec2(90, 40) * scale,
+        if (sectionTab("appearance-match", "对局", origin + ImVec2(area - 98 * scale, 0), ImVec2(90, 40) * scale,
                        appearancePage == 1))
             appearancePage = 1;
     }
@@ -132,11 +133,11 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         textBlock(title, width, 21, palette().accent);
         ImGui::Dummy(ImVec2(0, 16 * scale));
     };
-    const auto toggle = [&](const char* name, const char* key, const char* json, const char* off = "Off") {
+    const auto toggle = [&](const char* name, const char* key, const char* json, const char* off = "关") {
         bool v = valueOf(json) != 0;
         const auto p = ImGui::GetCursorScreenPos();
         text(p + ImVec2(0, 9) * scale, name, 18, palette().ink, width - 115 * scale);
-        if (button(key, v ? "On" : off, p + ImVec2(width - 68 * scale, 0), ImVec2(68, 36) * scale, v,
+        if (button(key, v ? "开" : off, p + ImVec2(width - 68 * scale, 0), ImVec2(68, 36) * scale, v,
                    !pendingCommand && !capturing()))
             send("settings", std::string(key) + " " + (v ? "0" : "1"));
         ImGui::SetCursorScreenPos(p + ImVec2(0, 58) * scale);
@@ -171,7 +172,7 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
                               palette().accent, 20);
         char shown[32]{};
         if (skinDefault)
-            std::snprintf(shown, sizeof(shown), "Skin");
+            std::snprintf(shown, sizeof(shown), "皮肤");
         else if (tenths)
             std::snprintf(shown, sizeof(shown), format, value / 10.f);
         else
@@ -187,17 +188,17 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
     if (settingsPage == 0 && appearancePage == 0) {
         const auto p = ImGui::GetCursorScreenPos();
         const int current = number(s, "windowSize", 90);
-        text(p + ImVec2(0, 8) * scale, "Fullscreen", 18, palette().ink);
-        if (button("fullscreen", current == 100 ? "On" : "Off", p + ImVec2(width - 68 * scale, 0),
+        text(p + ImVec2(0, 8) * scale, "全屏", 18, palette().ink);
+        if (button("fullscreen", current == 100 ? "开" : "关", p + ImVec2(width - 68 * scale, 0),
                    ImVec2(68, 36) * scale, current == 100))
             send("settings", "window-size " + std::to_string(current == 100 ? 90 : 100));
         ImGui::SetCursorScreenPos(p + ImVec2(0, 58) * scale);
         ImGui::Dummy(ImVec2(width, 0));
         int sizeIndex = std::clamp((current - 60) / 5, 0, 8);
-        if (combo("window-size", "Window size", sizeIndex,
+        if (combo("window-size", "窗口大小", sizeIndex,
                   {"60%", "65%", "70%", "75%", "80%", "85%", "90%", "95%", "100%"}, width))
             send("settings", "window-size " + std::to_string(60 + 5 * sizeIndex));
-        heading("Theme");
+        heading("主题");
         // Retired themes are not offered; the default leads the list.
         std::vector<int> themeIndices{ttcg::defaultInterfaceTheme};
         for (int index = 0; index < ttcg::interfaceThemeCount; ++index)
@@ -206,70 +207,70 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         std::vector<std::string> themeNames;
         for (int index : themeIndices) themeNames.emplace_back(ttcg::interfaceThemes[index].name);
         int themeChoice = int(std::find(themeIndices.begin(), themeIndices.end(), theme) - themeIndices.begin());
-        if (combo("theme", "Interface", themeChoice, themeNames, width))
+        if (combo("theme", "界面主题", themeChoice, themeNames, width))
             send("settings", "theme " + std::to_string(themeIndices[themeChoice]));
-        select("Key prompts", "key-prompts", "keyPrompts", {"Automatic", "Skin style", "Installed icons"});
-        select("Game board", "board-surface", "boardSurface",
-               {"Theme default", "Plain", "Slate", "Felt", "Parchment", "Leather", "Walnut", "Dark slab"});
-        slider("Board texture", "board-texture", "boardTexture", 100, "%d%%");
-        heading("Fonts");
+        select("按键提示", "key-prompts", "keyPrompts", {"自动", "皮肤样式", "已安装图标"});
+        select("牌桌", "board-surface", "boardSurface",
+               {"跟随主题", "素色", "石板", "毛毡", "羊皮纸", "皮革", "胡桃木", "深色石台"});
+        slider("牌桌纹理", "board-texture", "boardTexture", 100, "%d%%");
+        heading("字体（中文界面统一使用 MiSans）");
         const auto skinFontName = skin().font == "lato"    ? "Lato"
-                                  : skin().font == "serif" ? "Liberation Serif"
-                                  : skin().font == "sans"  ? "Liberation Sans"
+                                  : skin().font == "serif" ? "衬线"
+                                  : skin().font == "sans"  ? "无衬线"
                                                            : "Jost";
-        const std::vector<std::string> fonts{std::string("Skin: ") + skinFontName, "Georgia", "Times New Roman",
-                                             "Arial", "Verdana"};
-        select("Interface", "interface-font", "interfaceFont", fonts);
-        select("Card names", "card-name-font", "cardNameFont", fonts);
-        select("Card values", "card-value-font", "cardValueFont", fonts);
-        heading("Card face");
-        select("Frame", "card-frame", "cardFrame", {"Medallions", "Borderless", "Printed"});
-        select("Values", "card-ranks", "rankLayout", {"Edge values", "Classic values"});
-        toggle("Card names", "card-names", "showCardNames");
-        toggle("Card groups", "card-groups", "showCardGroups");
+        const std::vector<std::string> fonts{std::string("皮肤：") + skinFontName, "衬线体", "无衬线体", "粗体",
+                                             "等宽体"};
+        select("界面字体", "interface-font", "interfaceFont", fonts);
+        select("卡名字体", "card-name-font", "cardNameFont", fonts);
+        select("点数样式", "card-value-font", "cardValueFont", fonts);
+        heading("卡面");
+        select("边框样式", "card-frame", "cardFrame", {"徽章", "无边框", "印刷"});
+        select("数值样式", "card-ranks", "rankLayout", {"边缘数值", "经典数值"});
+        toggle("显示卡名", "card-names", "showCardNames");
+        toggle("显示分组", "card-groups", "showCardGroups");
         if (face.legacy())
-            select("Nameplate", "nameplate", "nameplateStyle", {"Shaded band", "Soft fade", "Printed on art"});
-        select("Lettering", "name-case", "nameCase", {"Skin: Title case", "Title case", "Uppercase"});
+            select("铭牌样式", "nameplate", "nameplateStyle", {"阴影带", "柔和渐变", "印在原画"});
+        select("字型", "name-case", "nameCase", {"跟随皮肤", "首字母大写", "全大写"});
         if (face.legacy()) {
-            heading("Card values");
-            slider("Shadow opacity", "rank-shadow-opacity", "rankShadowOpacity", 100, "%d%%");
-            slider("Shadow blur", "rank-shadow-blur", "rankShadowBlur", 8);
-            slider("Shadow offset", "rank-shadow-offset", "rankShadowOffset", 6);
-            toggle("Stroke", "rank-stroke", "rankStroke", "Skin");
+            heading("点数");
+            slider("阴影不透明度", "rank-shadow-opacity", "rankShadowOpacity", 100, "%d%%");
+            slider("阴影模糊", "rank-shadow-blur", "rankShadowBlur", 8);
+            slider("阴影偏移", "rank-shadow-offset", "rankShadowOffset", 6);
+            toggle("描边", "rank-stroke", "rankStroke", "皮肤");
             if (valueOf("rankStroke"))
-                slider("Stroke weight", "rank-stroke-weight", "rankStrokeWeight", 30, "%.1f px", true);
+                slider("描边粗细", "rank-stroke-weight", "rankStrokeWeight", 30, "%.1f px", true);
             else
-                textBlock("Skin default: 1 px stroke.", width, 18, palette().muted);
-            if (action("Reset card values")) send("settings", "rank-finish-reset 0");
+                textBlock("跟随皮肤：1 px 描边。", width, 18, palette().muted);
+            if (action("重置卡牌数值")) send("settings", "rank-finish-reset 0");
         }
-        heading("Card back");
+        heading("卡背");
         int i = 0;
         for (const auto& back : arrayMember(state, "cardBacks")) {
             const auto pos = ImGui::GetCursorScreenPos();
             ImGui::PushID(i++);
             if (chapter("back", label(back, "name"), pos + ImVec2(72 * scale, 0),
                         ImVec2(width - 72 * scale, 85 * scale), label(state, "cardBackID") == label(back, "id"),
-                        flag(back, "custom") ? "Custom" : ""))
+                        flag(back, "custom") ? "自定义" : ""))
                 send("cardback", "select " + label(back, "id"));
             auto image = assets.get(label(back, "art"));
             ImGui::GetWindowDrawList()->AddImage(image.id, pos, pos + ImVec2(54, 72) * scale);
             ImGui::PopID();
         }
-        if (action("Refresh card backs")) send("cardback", "refresh");
-        textBlock("Add custom images to the card backs folder, then refresh.", width, 18);
+        if (action("刷新卡背")) send("cardback", "refresh");
+        textBlock("把自定义图片放进卡背文件夹后点刷新。", width, 18);
         if (!label(s, "cardBackNotice").empty()) textBlock(label(s, "cardBackNotice"), width, 18, palette().accent);
     } else if (settingsPage == 0) {
-        textBlock("Opponent artwork", width, 21, palette().accent);
+        textBlock("对手卡面", width, 21, palette().accent);
         ImGui::Dummy(ImVec2(0, 16 * scale));
-        select("Finish", "match-art-treatment", "opponentTreatment", {"Original", "Muted", "Grayscale", "Sepia"});
+        select("版本", "match-art-treatment", "opponentTreatment", {"原色", "低饱和", "灰度", "棕褐"});
         if (valueOf("opponentTreatment") != 0) {
-            select("Apply to", "match-art-scope", "opponentScope", {"Hand", "Board", "Hand and board"});
-            slider("Strength", "match-art-strength", "opponentStrength", 100, "%d%%");
+            select("应用于", "match-art-scope", "opponentScope", {"手牌", "牌桌", "手牌与牌桌"});
+            slider("强度", "match-art-strength", "opponentStrength", 100, "%d%%");
         }
-        heading("Control colours");
-        select("Palette", "match-palette", "controlPalette",
-               {skin().player && skin().opponent ? "Skin colours" : "Tessera", "Blue / amber", "Violet / mint",
-                "Ivory / slate", "Custom"});
+        heading("控制色");
+        select("调色板", "match-palette", "controlPalette",
+               {skin().player && skin().opponent ? "皮肤配色" : "Tessera", "蓝 · 琥珀", "紫 · 薄荷",
+                "象牙 · 石板", "自定义"});
         if (valueOf("controlPalette") == 4) {
             const auto colour = [&](const char* title, const char* key, const char* json) {
                 const auto p = ImGui::GetCursorScreenPos();
@@ -313,25 +314,24 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
                 ImGui::SetCursorScreenPos(p + ImVec2(0, 100) * scale);
                 ImGui::Dummy(ImVec2(width, 0));
             };
-            colour("You", "match-player-colour", "playerColour");
-            colour("Opponent", "match-opponent-colour", "opponentColour");
+            colour("你", "match-player-colour", "playerColour");
+            colour("对手", "match-opponent-colour", "opponentColour");
         }
-        heading("Card borders");
+        heading("卡牌边框");
         if (face.legacy() || matchAppearance.marker) {
-            if (!face.legacy()) textBlock("Extra border around the frame.", width, 18, palette().muted);
-            select("Style", "match-border-style", "controlBorderStyle",
-                   {"Single line", "Double line", "Clipped corners", "Corner brackets", "Original Tessera"});
+            if (!face.legacy()) textBlock("在卡框外再加一层边框。", width, 18, palette().muted);
+            select("样式", "match-border-style", "controlBorderStyle",
+                   {"单线", "双线", "切角", "角括号", "原版 Tessera"});
             const bool skinWidth = valueOf("controlBorderWidth") == 12;
-            slider("Thickness", "match-border-width", "controlBorderWidth", 40, "%.1f px", true, skinWidth);
-            if (skinWidth) textBlock("Skin default: 1.8 px border.", width, 18, palette().muted);
-            slider("Opacity", "match-border-opacity", "controlBorderOpacity", 100, "%d%%");
+            slider("粗细", "match-border-width", "controlBorderWidth", 40, "%.1f px", true, skinWidth);
+            if (skinWidth) textBlock("跟随皮肤：1.8 px 边框。", width, 18, palette().muted);
+            slider("不透明度", "match-border-opacity", "controlBorderOpacity", 100, "%d%%");
         } else
-            textBlock("The frame uses your control colours. Enable the control marker for an extra border.", width, 18,
-                      palette().muted);
-        toggle("Control marker", "match-control-marker", "controlMarker");
-        if (valueOf("controlMarker")) textBlock("Filled: yours. Outline: opponent’s.", width, 18);
+            textBlock("卡框使用你的控制色。开启控制标记可再加一层边框。", width, 18, palette().muted);
+        toggle("控制标记", "match-control-marker", "controlMarker");
+        if (valueOf("controlMarker")) textBlock("实心为你的，描边为对手的。", width, 18);
         ImGui::Dummy(ImVec2(0, 16 * scale));
-        if (action("Reset match appearance")) send("settings", "match-appearance-reset 0");
+        if (action("重置对局外观")) send("settings", "match-appearance-reset 0");
     } else if (settingsPage == 1) {
         for (const auto& field : ttcg::HotkeyBindings::fields) {
             const auto p = ImGui::GetCursorScreenPos();
@@ -340,161 +340,162 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
             const auto binding = member(s, id.c_str());
             unsigned code = binding.is_number_integer() ? binding.get<unsigned>() : 0;
             const bool capture = label(s, "capturing") == id;
-            if (button(id.c_str(), capture ? "Press a key…" : keyLabel(code).c_str(), p + ImVec2(width * .43f, 0),
+            if (button(id.c_str(), capture ? "按下按键…" : keyLabel(code).c_str(), p + ImVec2(width * .43f, 0),
                        ImVec2(width * .39f, 40 * scale), capture, !pendingCommand))
                 send("binding", std::string(capture ? "cancel" : "begin " + id));
             if (button((id + "-clear").c_str(), "×", p + ImVec2(width - 115 * scale, 0), ImVec2(35, 40) * scale, false,
                        !capturing()))
                 send("binding", "unbind " + id);
-            if (button((id + "-reset").c_str(), "Reset", p + ImVec2(width - 72 * scale, 0), ImVec2(72, 40) * scale,
+            if (button((id + "-reset").c_str(), "重置", p + ImVec2(width - 72 * scale, 0), ImVec2(72, 40) * scale,
                        false, !capturing()))
                 send("binding", "reset " + id);
             ImGui::SetCursorScreenPos(p + ImVec2(0, 79) * scale);
             ImGui::Dummy(ImVec2(width, 0));
         }
-        textBlock("Left and right Shift, Ctrl, and Alt can be combined with a key. Escape cancels.", width, 18);
+        textBlock("左右 Shift、Ctrl、Alt 可与按键组合。Esc 取消。", width, 18);
         if (!label(s, "notice").empty()) textBlock(label(s, "notice"), width, 18, palette().accent);
-        heading("In Tessera");
+        heading("Tessera 显示");
         textBlock(
-            "Click a card, then a board square to play, or drag it there. In the deck editor, drag a card into a slot, double-click it or press Enter. Right-click a card or press I to inspect it. Q and E switch tabs. Tab and the arrow keys move focus, Enter selects and Esc goes back.",
+            "先点一张卡，再点牌桌格子出牌，也可以直接把卡拖过去。编辑牌组时，可把卡拖进槽位，或双击、按回车放入。右键点卡或按 I 检视。Q、E 切换页签。Tab 与方向键移动焦点，回车选中，Esc 返回。",
             width, 18);
         ImGui::Dummy(ImVec2(0, 10 * scale));
         textBlock(
-            "On a controller, the D-pad or left stick moves focus and A selects. The right stick moves the cursor; A then clicks what is under it. Y inspects a card, X adds it to the deck, LB and RB switch tabs and B goes back.",
+            "手柄上，十字键或左摇杆移动焦点，A 选中。右摇杆移动指针，A 点击指针下的东西。Y 检视卡牌，X 加入牌组，LB、RB 切换页签，B 返回。",
             width, 18);
     } else if (settingsPage == 2) {
         const auto& collectionState = member(state, "collection");
         const auto missing = join(arrayMember(collectionState, "missingSets"), ", ");
         if (!missing.empty()) {
-            textBlock("Unavailable cards", width, 21, palette().accent);
+            textBlock("不可用的卡", width, 21, palette().accent);
             ImGui::Dummy(ImVec2(0, 16 * scale));
-            textBlock("Missing expansions: " + missing +
-                          ". Reinstall them to restore your cards, or remove their saved copies.",
+            textBlock("缺少扩展：" + missing +
+                          "。重新安装可恢复卡牌，或移除这些卡在本角色上的存档副本。",
                       width, 18);
             const auto blocked = label(collectionState, "recoveryBlocked");
             ImGui::BeginDisabled(pendingCommand || capturing() || !member(state, "interruptedMatch").empty() ||
                                  !blocked.empty());
-            if (action("Remove unavailable cards"))
+            if (action("移除不可用的卡"))
                 confirm(
-                    "Remove unavailable cards?",
-                    "Removes unavailable cards and their discovery marks from this character, and clears their deck slots. Installed cards and game progress are kept. Reinstalling the expansions will no longer restore these copies. Keep an earlier save if you may want them back.",
-                    "collection-recovery", "remove-missing confirm", "Remove cards");
+                    "移除不可用的卡？",
+                    "会从本角色移除不可用的卡及其发现记录，并清空它们占用的牌组槽位。已安装的卡与游戏进度保留。重新安装扩展也不会再还原这些副本。如果日后可能想找回，请保留较旧的存档。",
+                    "collection-recovery", "remove-missing confirm", "移除卡牌");
             ImGui::EndDisabled();
             if (!blocked.empty()) textBlock(blocked, width, 18, palette().accent);
-            heading("Gameplay");
+            heading("玩法");
         }
-        toggle("Tessera games", "games", "gamesEnabled");
-        textBlock("Disables Tessera games. The album is still available.", width, 18);
-        toggle("Show captures before playing", "capture-preview", "capturePreview");
-        textBlock("With a card chosen, the board marks the cards it would capture on each square.", width, 18);
+        toggle("启用 Tessera 对局", "games", "gamesEnabled");
+        textBlock("关闭 Tessera 对局。相册仍可查看。", width, 18);
+        toggle("出牌前显示占地", "capture-preview", "capturePreview");
+        textBlock("选好一张卡后，牌桌会在每个格子上标出它能占下的卡。", width, 18);
         if (const auto packs = label(s, "merchantPacks"); !packs.empty()) {
-            heading("Merchant packs");
+            heading("商人卡包");
             textBlock(packs, width, 18, palette().accent);
         }
-        heading("Modded players");
-        select("Residents", "residents", "residents", {"Disabled", "Some residents", "All eligible residents"});
-        toggle("Only vanilla voices", "vanilla-voices", "vanillaVoicesOnly");
-        textBlock("Authored opponents can use their own voices.", width, 18);
-        heading("Add a player");
-        textBlock(label(s, "residentCandidate", "Look at an eligible NPC before opening the album."), width, 18);
-        if (button("add-resident", "Add player", ImGui::GetCursorScreenPos(), ImVec2(200, 40) * scale, false,
+        heading("模组对手");
+        select("居民", "residents", "residents", {"禁用", "部分居民", "全部符合条件的居民"});
+        toggle("仅原版语音", "vanilla-voices", "vanillaVoicesOnly");
+        textBlock("自制对手可以使用各自的语音。", width, 18);
+        heading("添加玩家");
+        textBlock(label(s, "residentCandidate", "先看向一名符合条件的 NPC，再打开相册。"), width, 18);
+        if (button("add-resident", "添加玩家", ImGui::GetCursorScreenPos(), ImVec2(200, 40) * scale, false,
                    flag(s, "canAddResident") && !pendingCommand))
             send("npc-add");
-        heading("World pause");
-        toggle("Pause in album", "pause-album", "pauseWorldInAlbum");
-        heading("Experimental");
-        textBlock("Unpaused games can be interrupted when the opponent moves or enters a scene.", width, 18);
-        toggle("Pause in shops", "pause-shop", "pauseWorldInShops");
-        toggle("Pause in match setup", "pause-setup", "pauseWorldInMatchSetup");
-        toggle("Pause in match", "pause-match", "pauseWorldDuringMatches");
+        heading("世界暂停");
+        toggle("相册中暂停", "pause-album", "pauseWorldInAlbum");
+        heading("实验性功能");
+        textBlock("未暂停的对局中，对手移动或进入场景时会被打断。", width, 18);
+        toggle("商店中暂停", "pause-shop", "pauseWorldInShops");
+        toggle("对局准备中暂停", "pause-setup", "pauseWorldInMatchSetup");
+        toggle("对局中暂停", "pause-match", "pauseWorldDuringMatches");
     } else {
         const auto devToggle = [&](const char* name, const char* command, const char* json) {
             const auto p = ImGui::GetCursorScreenPos();
             const bool value = flag(dev, json);
             text(p + ImVec2(0, 8) * scale, name, 18, palette().ink);
-            if (button(command, value ? "On" : "Off", p + ImVec2(width - 68 * scale, 0), ImVec2(68, 36) * scale, value))
+            if (button(command, value ? "开" : "关", p + ImVec2(width - 68 * scale, 0), ImVec2(68, 36) * scale, value))
                 send("development", std::string("set ") + command + " " + (value ? "0" : "1"));
             ImGui::SetCursorScreenPos(p + ImVec2(0, 58) * scale);
             ImGui::Dummy(ImVec2(width, 0));
         };
-        heading("Collection");
-        if (action("Add all cards")) send("development", "cards");
+        heading("收藏");
+        if (action("添加全部卡牌")) send("development", "cards");
         ImGui::SameLine();
-        if (action("Add all foils")) send("development", "foils");
+        if (action("添加全部闪卡")) send("development", "foils");
         const auto blocked = label(member(state, "collection"), "recoveryBlocked");
         ImGui::Dummy(ImVec2(0, 12 * scale));
         ImGui::BeginDisabled(pendingCommand || capturing() || !member(state, "interruptedMatch").empty() ||
                              !blocked.empty());
-        if (action("Clear collection"))
+        if (action("清空收藏"))
             confirm(
-                "Clear your collection?",
-                "Deletes every card and foil, including unavailable cards, clears discovery marks and empties all decks for this character. Your album, gold and game progress are kept. Automatic card grants and Reveal all cards will be turned off for all characters. Restore an earlier save to recover deleted cards.",
-                "collection-recovery", "clear confirm", "Clear collection");
+                "清空你的收藏？",
+                "会删除本角色所有卡与闪卡（含不可用的卡），清除发现记录并清空全部牌组。相册、金币与游戏进度保留。自动发卡与“揭示全部卡牌”会对所有角色关闭。删除后只能靠较早的存档找回。",
+                "collection-recovery", "clear confirm", "清空收藏");
         ImGui::EndDisabled();
-        textBlock(blocked.empty() ? "Start collecting again with an empty album. Your game progress is kept." : blocked,
+        textBlock(blocked.empty() ? "从空相册重新开始收集。游戏进度保留。" : blocked,
                   width, 18);
         ImGui::Dummy(ImVec2(0, 18 * scale));
         const auto resetBlocked = label(member(state, "collection"), "resetBlocked", blocked);
         ImGui::BeginDisabled(pendingCommand || capturing() || !member(state, "interruptedMatch").empty() ||
                              !resetBlocked.empty());
-        if (action("Reset Tessera"))
+        if (action("重置 Tessera"))
             confirm(
-                "Reset Tessera for this character?",
-                "Erases your collection, decks, records, reputation, tournaments and regional rule changes. Resets NPC and merchant collections, cancels card exchanges, and removes carried packs and old invitations. Keeps your album and gives eight starter cards and a starter deck. Gold and interface preferences stay. Development overrides return to defaults for all characters. Restore an earlier save to undo.",
-                "collection-recovery", "reset confirm", "Reset Tessera");
+                "为本角色重置 Tessera？",
+                "会清空收藏、牌组、战绩、声望、锦标赛与地区规则改动，重置 NPC 与商人收藏，取消换卡，并移除携带的卡包与旧邀请函。相册保留，并发放八张起始卡与一套起始牌组。金币与界面偏好不变，开发者覆盖项对所有角色恢复默认。只能靠较早的存档撤销。",
+                "collection-recovery", "reset confirm", "重置 Tessera");
         ImGui::EndDisabled();
         textBlock(resetBlocked.empty()
-                      ? "Start Tessera over with your album and starter cards. All Tessera progress is erased."
+                      ? "用相册与起始卡重新开始 Tessera。所有 Tessera 进度会被清除。"
                       : resetBlocked,
                   width, 18);
-        heading("Tournaments");
-        devToggle("Regular tournaments", "RegularTournaments", "RegularTournaments");
-        devToggle("Invitational tournaments", "InvitationalTournaments", "InvitationalTournaments");
-        devToggle("Masters tournaments", "MastersTournaments", "MastersTournaments");
+        heading("锦标赛");
+        devToggle("常规锦标赛", "RegularTournaments", "RegularTournaments");
+        devToggle("邀请赛", "InvitationalTournaments", "InvitationalTournaments");
+        devToggle("大师赛", "MastersTournaments", "MastersTournaments");
         std::vector<std::string> holds;
         for (const auto& h : arrayMember(member(state, "collection"), "regions")) holds.push_back(label(h, "name"));
         int hold = std::clamp(number(dev, "TournamentHold", 1) - 1, 0, 9);
-        if (!holds.empty() && combo("dev-hold", "Courier hold", hold, holds, width))
+        if (!holds.empty() && combo("dev-hold", "信使领地", hold, holds, width))
             send("development", "set TournamentHold " + std::to_string(hold + 1));
-        heading("Players");
-        devToggle("Show all players", "ShowAllPlayers", "ShowAllPlayers");
-        devToggle("Unlock all players", "UnlockAllPlayers", "UnlockAllPlayers");
-        devToggle("Reveal all cards", "RevealAllCards", "RevealAllCards");
-        devToggle("Allow any NPC", "AllowAnyNPC", "AllowAnyNPC");
-        devToggle("Record results", "RecordResults", "RecordResults");
-        heading("Match overrides");
+        heading("玩家");
+        devToggle("显示全部玩家", "ShowAllPlayers", "ShowAllPlayers");
+        devToggle("解锁全部玩家", "UnlockAllPlayers", "UnlockAllPlayers");
+        devToggle("揭示全部卡牌", "RevealAllCards", "RevealAllCards");
+        devToggle("允许任意 NPC", "AllowAnyNPC", "AllowAnyNPC");
+        devToggle("记录战绩", "RecordResults", "RecordResults");
+        heading("对局覆盖");
         int rules = number(dev, "Rules", -1);
         bool inherit = rules < 0;
-        if (ImGui::Checkbox("Use regional rules", &inherit))
+        if (ImGui::Checkbox("使用地区规则", &inherit))
             send("development", "set Rules " + std::to_string(inherit ? -1 : 0));
         if (!inherit)
             for (auto [bit, name] : ruleNames) {
                 bool value = (rules & bit) != 0;
-                if (ImGui::Checkbox(name, &value)) {
+                const auto shown = zhRuleName(name);
+                if (ImGui::Checkbox((shown + "##" + name).c_str(), &value)) {
                     const auto proposed =
                         value ? ttcg::withSpreadRule(rules, bit) : ttcg::withoutCultureRule(rules, bit);
                     send("development", "set Rules " + std::to_string(proposed));
                 }
             }
         int trade = number(dev, "TradeRule", -1) + 1;
-        if (combo("dev-trade", "Trade rule", trade, {"Default", "None", "One", "Diff", "Direct", "All"}, width))
+        if (combo("dev-trade", "交易规则", trade, {"默认", "无", "一张", "分差", "直接", "全部"}, width))
             send("development", "set TradeRule " + std::to_string(trade - 1));
         int skill = number(dev, "OpponentSkill", -1) + 1;
-        if (combo("dev-skill", "Opponent skill", skill,
-                  {"Default", "Beginner", "Learner", "Regular", "Experienced", "Expert", "Master"}, width))
+        if (combo("dev-skill", "对手水平", skill,
+                  {"默认", "新手", "学徒", "普通", "熟练", "专家", "大师"}, width))
             send("development", "set OpponentSkill " + std::to_string(skill - 1));
         std::vector<int> wagers{-1};
-        std::vector<std::string> wagerLabels{"Default"};
+        std::vector<std::string> wagerLabels{"默认"};
         int wager = 0;
         for (int amount : ttcg::wagerAmounts) {
             wagers.push_back(amount);
             wagerLabels.push_back(std::to_string(amount));
             if (amount == number(dev, "Wager", -1)) wager = int(wagers.size()) - 1;
         }
-        if (combo("dev-wager", "Wager", wager, wagerLabels, width))
+        if (combo("dev-wager", "赌注", wager, wagerLabels, width))
             send("development", "set Wager " + std::to_string(wagers[wager]));
         int lesson = number(dev, "RuleLesson");
-        if (combo("dev-lesson", "Rule lesson", lesson, {"Off", "Three Open", "Legion", "Decimation", "Affinity"},
+        if (combo("dev-lesson", "规则教学", lesson, {"关闭", "三明牌", "军团", "减损", "亲和"},
                   width))
             send("development", "set RuleLesson " + std::to_string(lesson));
         if (!label(dev, "notice").empty()) textBlock(label(dev, "notice"), width, 18, palette().accent);
@@ -526,8 +527,8 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         };
         if (button("previous-preview", "←", buttons, ImVec2(35, 36) * scale)) step(-1);
         if (button("next-preview", "→", buttons + ImVec2(w - 35 * scale, 0), ImVec2(35, 36) * scale)) step(1);
-        text(buttons + ImVec2(w / 2, 0), collection.cards[selected].name, 18, palette().muted, w - 90 * scale, true);
-        if (button("turn-preview", previewBack ? "Show front" : "Show back",
+        text(buttons + ImVec2(w / 2, 0), ttcg::zhCardName(collection.cards[selected].name), 18, palette().muted, w - 90 * scale, true);
+        if (button("turn-preview", previewBack ? "看正面" : "看背面",
                    buttons + ImVec2((w - 145 * scale) / 2, 58 * scale), ImVec2(145, 38) * scale))
             previewBack = !previewBack;
     }

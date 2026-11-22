@@ -1,4 +1,5 @@
 #include "App.h"
+#include "ChineseText.h"
 #include "CardName.h"
 #include "Surface.h"
 #include <chrono>
@@ -8,6 +9,8 @@
 #include <iostream>
 #include <numbers>
 #include <imgui_internal.h>
+#include <filesystem>
+#include "UiGlyphs.h"
 
 namespace preview {
 namespace {
@@ -39,7 +42,7 @@ std::string groups(const CardView& card) {
     for (unsigned i = 0; i < ttcg::creatureGroups.size(); ++i)
         if (card.groups & (1ull << i)) {
             if (!out.empty()) out += " / ";
-            out += ttcg::creatureGroups[i];
+            out += ttcg::zhGroupName(i);
         }
     return out;
 }
@@ -49,9 +52,9 @@ std::string affinities(const CardView& card) {
     for (int i = 0; i < 5; ++i)
         if (card.affinityMask & (1u << i)) {
             if (!out.empty()) out += " / ";
-            out += labels[i];
+            out += ttcg::zhAffinityName(static_cast<std::size_t>(i));
         }
-    return out.empty() ? "No affinity" : out;
+    return out.empty() ? "无亲和" : out;
 }
 // Every theme a player can choose has a row.
 constexpr bool themesHavePalettes() {
@@ -83,33 +86,69 @@ App::App(Renderer& r, const Options& o) : renderer(r), options(o), assets(r, o.t
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
-    const auto loadFont = [&](const char* file, float sizeScale = 1.f) {
-        const auto path =
-            (o.hosted ? o.tesseraRoot / "TesseraUI/fonts" / file : o.previewRoot / "assets/fonts" / file).u8string();
+    const auto fontRoot = [&] {
+        return o.hosted ? o.tesseraRoot / "TesseraUI/fonts" : o.previewRoot / "assets/fonts";
+    };
+    const auto addFace = [&](const std::filesystem::path& path, float sizeScale) -> ImFont* {
+        if (!std::filesystem::is_regular_file(path)) return nullptr;
         ImFontConfig config;
         config.ExtraSizeScale = sizeScale;
-        return io.Fonts->AddFontFromFileTTF(reinterpret_cast<const char*>(path.c_str()), 24, &config);
+        // The Chinese face needs CJK glyph coverage of its own; ImGui's default Latin
+        // set has none, so text would come out as blank boxes.
+        config.GlyphRanges = uiGlyphRanges();
+        const auto wide = path.u8string();
+        return io.Fonts->AddFontFromFileTTF(reinterpret_cast<const char*>(wide.c_str()), 24, &config);
     };
     const auto symbolFallback = [&] {
-        const auto path = (o.hosted ? o.tesseraRoot / "TesseraUI/fonts/LiberationSans-Regular.ttf"
-                                    : o.previewRoot / "assets/fonts/LiberationSans-Regular.ttf")
-                              .u8string();
+        const auto file = fontRoot() / "LiberationSans-Regular.ttf";
+        if (!std::filesystem::is_regular_file(file)) return;
+        const auto wide = file.u8string();
         ImFontConfig config;
         config.MergeMode = true;
-        io.Fonts->AddFontFromFileTTF(reinterpret_cast<const char*>(path.c_str()), 24, &config);
+        io.Fonts->AddFontFromFileTTF(reinterpret_cast<const char*>(wide.c_str()), 24, &config);
     };
-    serif = loadFont("LiberationSerif-Regular.ttf");
-    sans = loadFont("LiberationSans-Regular.ttf");
-    bold = loadFont("LiberationSerif-Bold.ttf");
-    // Jost's generous vertical metrics otherwise make it much smaller than
-    // Lato or the system fonts at the same nominal control height.
-    jost = loadFont("Jost-Regular.ttf", 1.2f);
-    if (jost) symbolFallback();
-    jostBold = loadFont("Jost-Bold.ttf", 1.2f);
-    lato = loadFont("Lato-Regular.ttf");
-    if (lato) symbolFallback();
+    // A single Chinese family replaces the six Latin faces. MiSans carries Latin and
+    // CJK in the same face, and the old Liberation / Jost / Lato split only existed for
+    // the shape of its Latin capitals, which Chinese cannot inherit anyway. The slots
+    // keep their names, so no drawing code has to change; two weights cover regular and
+    // bold. Loading one instance per slot would bake the CJK set six times over and
+    // overflow the atlas, so the slots share pointers.
+    // MiSans may sit beside the other UI faces, inside the plugin folder, or in the
+    // shared SKSE font directory the game already reads (Data\SKSE\Plugins\fonts).
+    // Accept all of them, so the font does not have to be copied anywhere new.
+    const auto findFace = [&](const char* name) -> std::filesystem::path {
+        const std::filesystem::path candidates[]{
+            fontRoot() / name,
+            o.tesseraRoot / "TesseraUI/fonts" / name,
+            o.previewRoot / "assets/fonts" / name,
+            o.tesseraRoot / "fonts" / name,
+            o.tesseraRoot.parent_path() / "fonts" / name,
+            std::filesystem::path("Data/SKSE/Plugins/fonts") / name,
+        };
+        for (const auto& candidate : candidates)
+            if (std::filesystem::is_regular_file(candidate)) return candidate;
+        return {};
+    };
+    const auto regularPath = findFace("MiSans-Regular.ttf");
+    const auto strongPath = findFace("MiSans-Semibold.ttf");
+    if (!regularPath.empty()) {
+        auto* regular = addFace(regularPath, 1.f);
+        auto* strong = strongPath.empty() ? regular : addFace(strongPath, 1.f);
+        serif = sans = lato = jost = regular;
+        bold = jostBold = strong;
+        if (regular) symbolFallback();
+    } else {
+        serif = addFace(fontRoot() / "LiberationSerif-Regular.ttf", 1.f);
+        sans = addFace(fontRoot() / "LiberationSans-Regular.ttf", 1.f);
+        bold = addFace(fontRoot() / "LiberationSerif-Bold.ttf", 1.f);
+        jost = addFace(fontRoot() / "Jost-Regular.ttf", 1.2f);
+        if (jost) symbolFallback();
+        jostBold = addFace(fontRoot() / "Jost-Bold.ttf", 1.2f);
+        lato = addFace(fontRoot() / "Lato-Regular.ttf", 1.f);
+        if (lato) symbolFallback();
+    }
     if (!serif || !sans || !bold || !jost || !jostBold || !lato) throw std::runtime_error("Tessera fonts are missing");
-    selected = findCard("Assembled Sanitizer");
+    selected = findCard("组装净化体");
     visible = filter.results();
 }
 App::~App() {

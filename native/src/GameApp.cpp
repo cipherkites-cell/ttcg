@@ -1,4 +1,5 @@
 #include "GameApp.h"
+#include "ChineseText.h"
 #include "Announcements.h"
 #include "CardName.h"
 #include <imgui_internal.h>
@@ -16,23 +17,9 @@ GameApp::GameApp(Renderer& r, const Options& options) : App(r, options) {
     interfaceFonts = {nullptr, serif, serif, sans, sans};
     nameFonts = interfaceFonts;
     valueFonts = {nullptr, bold, bold, sans, sans};
-#ifdef _WIN32
-    wchar_t windows[32768]{};
-    const auto n = GetWindowsDirectoryW(windows, 32768);
-    if (n && n < 32768) {
-        const auto fonts = std::filesystem::path(windows) / "Fonts";
-        const char* regular[]{"", "georgia.ttf", "times.ttf", "arial.ttf", "verdana.ttf"};
-        const char* strong[]{"", "georgiab.ttf", "timesbd.ttf", "arialbd.ttf", "verdanab.ttf"};
-        for (unsigned i = 1; i < 5; ++i) {
-            auto p = fonts / regular[i];
-            if (std::filesystem::is_regular_file(p))
-                interfaceFonts[i] = nameFonts[i] = ImGui::GetIO().Fonts->AddFontFromFileTTF(p.string().c_str(), 24);
-            p = fonts / strong[i];
-            if (std::filesystem::is_regular_file(p))
-                valueFonts[i] = ImGui::GetIO().Fonts->AddFontFromFileTTF(p.string().c_str(), 24);
-        }
-    }
-#endif
+    // The four pickable faces fall back to the skin's own font. The Windows system
+    // faces used to be loaded here, but Georgia, Times, Arial and Verdana carry no CJK
+    // coverage, so choosing one would have put every Chinese label in boxes.
     collection.connected = true;
     collection.ready = false;
     visible.clear();
@@ -250,7 +237,7 @@ void GameApp::confirmation() {
         }
         ImGui::Dummy(ImVec2(0, 24 * scale));
         auto p = ImGui::GetCursorScreenPos();
-        if (button("cancel", "Cancel", p, ImVec2(160, 40) * scale) || backPressed()) {
+        if (button("cancel", "取消", p, ImVec2(160, 40) * scale) || backPressed()) {
             confirmationTitle.clear();
             ImGui::CloseCurrentPopup();
         }
@@ -341,32 +328,32 @@ float GameApp::factRows(const CardView& c, ImVec2 at, float width, bool draw, bo
         unsigned icons = 0;
     };
     std::vector<Row> rows;
-    rows.push_back({"Rarity", c.rarity + (selectedFoil ? " · Foil" : ""), rarity});
-    if (!compact) rows.push_back({"Tier", tierNumeral(c.tier), palette().ink});
+    rows.push_back({"稀有度", std::string(ttcg::zhRarity(c.rarity)) + (selectedFoil ? " · 闪卡" : ""), rarity});
+    if (!compact) rows.push_back({"阶级", tierNumeral(c.tier), palette().ink});
     std::string group;
     for (unsigned i = 0; i < ttcg::creatureGroups.size(); ++i)
-        if (c.groups & (1ull << i)) group += (group.empty() ? "" : ", ") + std::string(ttcg::creatureGroups[i]);
-    if (!group.empty()) rows.push_back({"Group", group, palette().ink});
+        if (c.groups & (1ull << i)) group += (group.empty() ? "" : "、") + std::string(ttcg::zhGroupName(i));
+    if (!group.empty()) rows.push_back({"分组", group, palette().ink});
     std::string affinity;
     for (int a = 0; a < 5; ++a)
         if (c.affinityMask & (1u << a))
-            affinity += (affinity.empty() ? "" : ", ") + std::string(ttcg::attributeNames[a]);
-    rows.push_back({"Affinity", affinity.empty() ? "Neutral" : affinity,
+            affinity += (affinity.empty() ? "" : "、") + std::string(ttcg::zhAffinityName(static_cast<std::size_t>(a)));
+    rows.push_back({"亲和", affinity.empty() ? "中立" : affinity,
                     affinity.empty() ? palette().muted : palette().ink, c.affinityMask});
-    if (!c.set.empty() && !compact) rows.push_back({"Set", c.set, palette().ink});
+    if (!c.set.empty() && !compact) rows.push_back({"系列", std::string(ttcg::zhSet(c.set)), palette().ink});
     if (collection.connected) {
         const int other = c.owned[selectedFoil ? 0 : 1];
         rows.push_back(
-            {"Owned",
+            {"拥有",
              std::to_string(c.owned[selectedFoil ? 1 : 0]) +
-                 (other ? std::string(" · ") + std::to_string(other) + (selectedFoil ? " standard" : " foil") : ""),
+                 (other ? std::string(" · ") + std::to_string(other) + (selectedFoil ? " 普通" : " 闪卡") : ""),
              skin().value});
     }
-    if (c.unique) rows.push_back({"Unique", "One per deck", palette().muted});
+    if (c.unique) rows.push_back({"唯一", "每副牌组限一张", palette().muted});
     if (inspectionModifier && inspecting)
-        rows.push_back({"On this square",
+        rows.push_back({"此格效果",
                         std::string(inspectionModifier > 0 ? "+" : "−") + std::to_string(std::abs(inspectionModifier)) +
-                            " to all sides",
+                            " 全边",
                         palette().accent});
     const float rowHeight = 31 * scale;
     auto* d = ImGui::GetWindowDrawList();
@@ -403,8 +390,9 @@ float GameApp::factRows(const CardView& c, ImVec2 at, float width, bool draw, bo
 }
 float GameApp::metadata(const CardView& c, ImVec2 at, float width, bool draw) {
     float y = at.y;
-    if (draw) text(ImVec2(at.x, y), c.name, 26, palette().ink, width);
-    y += font()->CalcTextSizeA(26 * scale, 1e6f, width, c.name.c_str()).y + 12 * scale;
+    const auto shownName = ttcg::zhCardName(c.name);
+    if (draw) text(ImVec2(at.x, y), shownName, 26, palette().ink, width);
+    y += font()->CalcTextSizeA(26 * scale, 1e6f, width, shownName.c_str()).y + 12 * scale;
     if (draw) skinRule(ImVec2(at.x, y), ImVec2(at.x + width, y), .7f);
     y += 8 * scale;
     y += factRows(c, ImVec2(at.x, y), width, draw);
@@ -444,7 +432,7 @@ float GameApp::ruleChips(ImVec2 at, float width, unsigned flags, int trade, bool
     for (auto [bit, name] : ruleNames)
         if (flags & bit) chips.push_back({name, int(bit)});
     if (casual)
-        chips.push_back({"Casual"});
+        chips.push_back({"休闲"});
     else if (trade >= 0)
         chips.push_back({tradeName(trade), -1, trade});
     if (changes && changes->is_array())
@@ -463,8 +451,8 @@ float GameApp::ruleChips(ImVec2 at, float width, unsigned flags, int trade, bool
         }
     // The trade rule decides which cards change hands, so it is named apart from the rules of play.
     const auto caption = [](const Chip& chip) {
-        return std::string(chip.change ? (chip.active ? "+ " : "− ") : "") + (chip.trade >= 0 ? "Trade: " : "") +
-               chip.name;
+        return std::string(chip.change ? (chip.active ? "+ " : "− ") : "") + (chip.trade >= 0 ? "交易：" : "") +
+               zhRuleName(chip.name);
     };
     std::vector<float> widths, rows{0};
     for (const auto& chip : chips) {
@@ -483,12 +471,12 @@ float GameApp::ruleChips(ImVec2 at, float width, unsigned flags, int trade, bool
         const std::string shown = caption(chip);
         std::string help, chapterID = "trade";
         for (const auto& page : reference.at("pages"))
-            if (label(page, "title") == name) {
+            if (label(page, "en") == name) {
                 help = label(page, "copy");
                 chapterID = label(page, "id");
             }
         for (const auto& page : reference.at("trades"))
-            if (label(page, "title") == name) help = label(page, "copy");
+            if (label(page, "en") == name) help = label(page, "copy");
         if (name == "Casual") help = "Games with children have no card trades or gold wagers.";
         bool hit = false;
         if (explained) {
@@ -777,7 +765,7 @@ void GameApp::draw() {
         }
         keyPrompt("E", "360_RB", "", ImVec2(x - 6 * scale, tabY + 5 * scale));
         if (flag(state, "matchContext") &&
-            button("return", "Return to game", ImVec2(at.x + width - 215 * scale, tabY + scale),
+            button("return", "返回游戏", ImVec2(at.x + width - 215 * scale, tabY + scale),
                    ImVec2(160, 38) * scale))
             send("browse", "lobby");
         const auto& interrupted = member(state, "interruptedMatch");
@@ -789,12 +777,12 @@ void GameApp::draw() {
             text(body + ImVec2(0, 3 * scale), offer, 18, palette().accent);
             float x = font()->CalcTextSizeA(18 * scale, 1e5f, 0, offer.c_str()).x + 26 * scale;
             if (flag(interrupted, "canResume")) {
-                if (button("resume", finished ? "Collect" : "Resume", body + ImVec2(x, -5 * scale),
+                if (button("resume", finished ? "领奖" : "继续", body + ImVec2(x, -5 * scale),
                            ImVec2(105, 35) * scale, true))
                     send("interrupted", "resume");
                 x += 117 * scale;
             }
-            if (!finished && button("abandon", "Forfeit", body + ImVec2(x, -5 * scale), ImVec2(105, 35) * scale))
+            if (!finished && button("abandon", "认输", body + ImVec2(x, -5 * scale), ImVec2(105, 35) * scale))
                 confirm("Forfeit this game?", "The trade rule and wager still apply.", "interrupted", "forfeit",
                         "Forfeit");
             body.y += 47 * scale;

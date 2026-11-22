@@ -1,4 +1,6 @@
 #pragma once
+
+#include "ChineseText.h"
 #include "Collection.h"
 #include <nlohmann/json.hpp>
 #include <functional>
@@ -27,7 +29,7 @@ inline std::vector<CardView> baseCatalog() {
         if (thumb.starts_with("cards/")) thumb.replace(0, 6, "thumbs/");
         result.push_back({c.form,
                           c.id,
-                          c.name,
+                          ttcg::zhCardName(c.name),
                           c.art,
                           thumb,
                           c.rarity,

@@ -1,4 +1,5 @@
 #include "App.h"
+#include "ChineseText.h"
 #include "CardName.h"
 #include <algorithm>
 #include <cmath>
@@ -90,10 +91,10 @@ void App::framedCard(const CardView& c, Texture texture, ImVec2 at, ImVec2 size,
     // Below nine real pixels a name is noise; very small cards carry values only.
     if (size.x >= 84 && (face.names || face.groups)) {
         pixels = std::clamp(size.x * .069f, std::max(9.f, 9.f * scale), std::max(9.f, 28.f * scale));
-        if (face.names) lines = nameLines(nameFont, c.name, pixels, size.x * .84f, face.lettering);
+        if (face.names) lines = nameLines(nameFont, ttcg::zhCardName(c.name), pixels, size.x * .84f, face.lettering);
         if (lines.size() > 2) {
             pixels *= .8f;
-            lines = nameLines(nameFont, c.name, pixels, size.x * .84f, face.lettering);
+            lines = nameLines(nameFont, ttcg::zhCardName(c.name), pixels, size.x * .84f, face.lettering);
         }
         lineHeight = pixels * 1.16f;
         groupPixels = std::clamp(size.x * .052f, 8.f * scale, 18.f * scale);

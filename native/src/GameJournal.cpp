@@ -11,7 +11,7 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
     ImGui::BeginChild("holds", ImVec2(nav, size.y), ImGuiChildFlags_NavFlattened);
     const float navWidth = nav - 20 * scale;
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 6 * scale));
-    if (chapter("all", "All holds", ImGui::GetCursorScreenPos(), ImVec2(navWidth, 43 * scale), journalHold == 0)) {
+    if (chapter("all", "全部领地", ImGui::GetCursorScreenPos(), ImVec2(navWidth, 43 * scale), journalHold == 0)) {
         journalHold = 0;
         journalPlayer = -1;
         journalQuery[0] = 0;
@@ -48,9 +48,9 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
     y += 15 * scale;
     ImGui::SetCursorScreenPos(ImVec2(mid.x, y));
     ImGui::SetNextItemWidth(width - 205 * scale);
-    ImGui::InputTextWithHint("##players", "Find a player", journalQuery, sizeof(journalQuery));
+    ImGui::InputTextWithHint("##players", "查找玩家", journalQuery, sizeof(journalQuery));
     ImGui::SetCursorScreenPos(ImVec2(mid.x + width - 190 * scale, y));
-    select("##player-filter", journalFilter, {"All players", "Played", "Unplayed"}, 190 * scale);
+    select("##player-filter", journalFilter, {"全部玩家", "已对战", "未对战"}, 190 * scale);
     y += 60 * scale;
     std::vector<int> rows;
     const auto& roster = arrayMember(c, "roster");
@@ -90,17 +90,17 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
             if (chapter("player" + std::to_string(i), label(p, "name"), pos, ImVec2(rowWidth, rowHeight),
                         journalPlayer == i, label(p, "skill"), 180 * scale))
                 journalPlayer = i;
-            std::string record = friendly               ? "Practice"
-                                 : !flag(p, "unlocked") ? "Unavailable"
+            std::string record = friendly               ? "练习"
+                                 : !flag(p, "unlocked") ? "未解锁"
                                  : number(p, "wins") + number(p, "losses") + number(p, "draws")
-                                     ? std::to_string(number(p, "wins")) + " W · " +
-                                           std::to_string(number(p, "losses")) + " L · " +
-                                           std::to_string(number(p, "draws")) + " D"
-                                     : "Not played";
+                                     ? std::to_string(number(p, "wins")) + " 胜 · " +
+                                           std::to_string(number(p, "losses")) + " 负 · " +
+                                           std::to_string(number(p, "draws")) + " 平"
+                                     : "未对战";
             text(pos + ImVec2(rowWidth - 180 * scale, 14 * scale), record, 15, palette().muted, 168 * scale);
         }
     if (rows.empty())
-        text(ImGui::GetCursorScreenPos() + ImVec2(listWidth / 2, 48 * scale), "No known players", 21, palette().muted,
+        text(ImGui::GetCursorScreenPos() + ImVec2(listWidth / 2, 48 * scale), "没有已知的玩家", 21, palette().muted,
              0, true);
     ImGui::PopStyleVar();
     ImGui::EndChild();
@@ -123,29 +123,29 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
                   games = wins + losses + draws;
         const bool friendly = flag(p, "friendlyOnly");
         std::vector<std::pair<const char*, std::string>> facts{
-            {"Found at", label(p, "location")},
-            {"Hold", flag(p, "traveller") ? "Traveller" : label(p, "hold")},
-            {"Skill", label(p, "skill")},
-            {"Games", friendly              ? "Practice only"
-                      : flag(p, "unlocked") ? "Available"
-                                            : "Not ready"}};
+            {"出现地点", label(p, "location")},
+            {"领地", flag(p, "traveller") ? "旅行者" : label(p, "hold")},
+            {"水平", label(p, "skill")},
+            {"对局", friendly              ? "仅练习"
+                      : flag(p, "unlocked") ? "可对战"
+                                            : "尚未就绪"}};
         if (!friendly && p.contains("rules")) {
             // What a game with them is played for. M'aiq's rules change with every game.
             const auto rules = rulesLabel(unsigned(number(p, "rules")));
-            facts.push_back({flag(p, "ownRules") ? "Own rules" : "Rules", flag(p, "traveller") && flag(p, "ownRules")
-                                                                              ? "Different every game"
-                                                                          : rules.empty() ? "Hidden hands"
+            facts.push_back({flag(p, "ownRules") ? "自有规则" : "规则", flag(p, "traveller") && flag(p, "ownRules")
+                                                                              ? "每局不同"
+                                                                          : rules.empty() ? "暗牌"
                                                                                           : rules});
-            facts.push_back({"Trade", tradeName(number(p, "trade"))});
+            facts.push_back({"交易", zhTradeName(number(p, "trade"))});
             if (number(p, "wager") > 0)
                 facts.push_back({"Wager", "Up to " + std::to_string(number(p, "wager")) + " gold"});
         }
         if (!friendly) {
-            facts.push_back({"Played", std::to_string(games)});
-            facts.push_back({"Won", std::to_string(wins)});
-            facts.push_back({"Lost", std::to_string(losses)});
-            facts.push_back({"Drawn", std::to_string(draws)});
-            if (games) facts.push_back({"Win rate", std::to_string(wins * 100 / games) + "%"});
+            facts.push_back({"已对战", std::to_string(games)});
+            facts.push_back({"胜", std::to_string(wins)});
+            facts.push_back({"负", std::to_string(losses)});
+            facts.push_back({"平", std::to_string(draws)});
+            if (games) facts.push_back({"胜率", std::to_string(wins * 100 / games) + "%"});
         }
         for (const auto& [name, value] : facts) {
             if (value.empty()) continue;

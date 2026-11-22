@@ -62,41 +62,41 @@ void GameApp::rules(ImVec2 at, ImVec2 size) {
     if (still) return;
     auto footer = ImVec2(origin.x, top.y + available + 10 * scale);
     std::string caption = label(frame, "caption");
-    if (demoSelected && number(frame, "square", -1) >= 0) caption = "Place the card on the highlighted square.";
+    if (demoSelected && number(frame, "square", -1) >= 0) caption = "把卡放到高亮格子上。";
     text(footer + ImVec2(width / 2, 0), caption, 18, palette().ink, width, true);
     footer.y = at.y + size.y - 38 * scale;
     const auto controls = footer + ImVec2((width - 445 * scale) * .5f, 0);
-    if (button("demo-back", "← Back", controls, ImVec2(98, 36) * scale, false, demoStep > 0)) {
+    if (button("demo-back", "← 上一步", controls, ImVec2(98, 36) * scale, false, demoStep > 0)) {
         --demoStep;
         demoSelected = false;
     }
     text(controls + ImVec2(142, 9.5f) * scale, std::to_string(demoStep + 1) + " / " + std::to_string(frames.size()), 18,
          palette().muted, 0, true);
-    if (button("demo-next", "Next →", controls + ImVec2(186, 0) * scale, ImVec2(104, 36) * scale, false,
+    if (button("demo-next", "下一步 →", controls + ImVec2(186, 0) * scale, ImVec2(104, 36) * scale, false,
                demoStep + 1 < int(frames.size()) && number(frame, "hand", -1) < 0)) {
         ++demoStep;
         demoSelected = false;
     }
-    if (button("demo-replay", "Start again", controls + ImVec2(320, 0) * scale, ImVec2(125, 36) * scale)) {
+    if (button("demo-replay", "重播", controls + ImVec2(320, 0) * scale, ImVec2(125, 36) * scale)) {
         demoStep = 0;
         demoSelected = false;
     }
 }
 void GameApp::rulesModal() {
     if (!showRuleReference) return;
-    if (!ImGui::IsPopupOpen("Rules")) ImGui::OpenPopup("Rules");
+    if (!ImGui::IsPopupOpen("规则书")) ImGui::OpenPopup("规则书");
     const auto display = ImGui::GetIO().DisplaySize;
     const ImVec2 extent =
         ImVec2(std::min(display.x - 35 * scale, 1260 * scale), std::min(display.y - 35 * scale, 880 * scale));
     ImGui::SetNextWindowPos(display * .5f, ImGuiCond_Always, ImVec2(.5f, .5f));
     ImGui::SetNextWindowSize(extent);
-    if (ImGui::BeginPopupModal("Rules", nullptr, ImGuiWindowFlags_NoDecoration | popupFlags())) {
+    if (ImGui::BeginPopupModal("规则书", nullptr, ImGuiWindowFlags_NoDecoration | popupFlags())) {
         popupSurface();
         const auto at = ImGui::GetWindowPos() + ImVec2(25, 22) * scale;
-        text(at, "Rules", 26, palette().accent);
+        text(at, "规则", 26, palette().accent);
         bool leave = false;
-        const float promptWidth = keyPrompt("Esc", "360_B", "Close", ImVec2(-1e5f, -1e5f));
-        keyPrompt("Esc", "360_B", "Close", at + ImVec2(extent.x - 50 * scale - promptWidth, 2 * scale), &leave,
+        const float promptWidth = keyPrompt("Esc", "360_B", "关闭", ImVec2(-1e5f, -1e5f));
+        keyPrompt("Esc", "360_B", "关闭", at + ImVec2(extent.x - 50 * scale - promptWidth, 2 * scale), &leave,
                   "close-rules");
         if (leave || backPressed()) {
             showRuleReference = false;
@@ -109,7 +109,7 @@ void GameApp::rulesModal() {
 }
 void GameApp::lessonPanel(ImVec2 at, ImVec2 size) {
     const auto& frame = member(state, "lesson");
-    text(at, "How to play", 26, palette().accent);
+    text(at, "玩法说明", 26, palette().accent);
     ruleChips(at + ImVec2(220, 0) * scale, size.x - 220 * scale, number(frame, "rules"));
     table(frame, at + ImVec2(0, 50) * scale, size - ImVec2(0, 160) * scale, true, true);
     std::string caption = label(frame, "caption");
@@ -124,16 +124,16 @@ void GameApp::lessonPanel(ImVec2 at, ImVec2 size) {
                         f.value("workshopRule", 0u) == frame.value("workshopRule", 0u))
                         caption = label(f, "caption");
             }
-    if (demoSelected && number(frame, "hand", -1) >= 0) caption = "Place the card on the highlighted square.";
+    if (demoSelected && number(frame, "hand", -1) >= 0) caption = "把卡放到高亮格子上。";
     text(at + ImVec2(size.x / 2, size.y - 92 * scale), caption, 21, palette().ink, size.x, true);
     const auto buttons = at + ImVec2(size.x / 2 - 180 * scale, size.y - 39 * scale);
-    if (button("replay-lesson", "Start again", buttons, ImVec2(140, 38) * scale)) send("lesson", "replay");
+    if (button("replay-lesson", "重播", buttons, ImVec2(140, 38) * scale)) send("lesson", "replay");
     const bool ended = number(frame, "step") >= number(frame, "total");
     if (ended) {
-        if (button("lesson-play", "Play", buttons + ImVec2(155, 0) * scale, ImVec2(170, 38) * scale, true))
+        if (button("lesson-play", "开始", buttons + ImVec2(155, 0) * scale, ImVec2(170, 38) * scale, true))
             send("lesson", "play");
     } else if (number(frame, "hand", -1) < 0) {
-        if (button("lesson-next", "Next →", buttons + ImVec2(155, 0) * scale, ImVec2(170, 38) * scale, true))
+        if (button("lesson-next", "下一步 →", buttons + ImVec2(155, 0) * scale, ImVec2(170, 38) * scale, true))
             send("lesson", "next");
     }
 }

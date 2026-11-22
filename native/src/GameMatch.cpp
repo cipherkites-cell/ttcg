@@ -14,8 +14,8 @@ bool GameApp::ruleRequestModal() {
         return false;
     }
     std::string copy =
-        offer ? "You brought " + rulesLabel(offer, false) + " from " + label(culture, "source") + ". Shall we try it?"
-              : "Can we play with " + rulesLabel(request, false) + "?";
+        offer ? "你从" + label(culture, "source") + "带来了“" + rulesLabel(offer, false) + "”，要试试吗？"
+              : "我们可以用“" + rulesLabel(request, false) + "”来一局吗？";
     if (offer) {
         if (const auto replaced = number(culture, "replaces"))
             copy += " It replaces " + rulesLabel(replaced, false) + " for this game.";
@@ -40,11 +40,11 @@ bool GameApp::ruleRequestModal() {
     const float noticeHeight = notice.empty() ? 0 : (18 + notice.size() * 21) * scale;
     const ImVec2 extent(width, (36 + speaker.size() * 32 + 18 + message.size() * 29 + 28 + 42 + 36 + 38) * scale +
                                    noticeHeight);
-    if (!ImGui::IsPopupOpen("Rule request")) ImGui::OpenPopup("Rule request");
+    if (!ImGui::IsPopupOpen("规则邀约")) ImGui::OpenPopup("Rule request");
     ImGui::SetNextWindowPos(frameAt + frameSize * .5f, ImGuiCond_Always, ImVec2(.5f, .5f));
     ImGui::SetNextWindowSize(extent);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(32, 36) * scale);
-    if (ImGui::BeginPopupModal("Rule request", nullptr,
+    if (ImGui::BeginPopupModal("规则邀约", nullptr,
                                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
                                    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar | popupFlags())) {
         const auto at = ImGui::GetWindowPos();
@@ -73,19 +73,19 @@ bool GameApp::ruleRequestModal() {
             ruleAnswerPending = true;
         };
         const auto buttons = ImVec2(at.x + (width - 320 * scale) / 2, y + 28 * scale);
-        if (button("accept-rule", "Yes", buttons, ImVec2(150, 42) * scale, true, ready)) answer(true);
+        if (button("accept-rule", "同意", buttons, ImVec2(150, 42) * scale, true, ready)) answer(true);
         if (ImGui::IsWindowAppearing()) {
             ImGui::SetItemDefaultFocus();
             ImGui::SetNavCursorVisible(true);
         }
-        if (button("decline-rule", "No", buttons + ImVec2(170, 0) * scale, ImVec2(150, 42) * scale, false, ready))
+        if (button("decline-rule", "拒绝", buttons + ImVec2(170, 0) * scale, ImVec2(150, 42) * scale, false, ready))
             answer(false);
         // Close the offer conversation on Escape.
         const bool back = escapeRequested || backPressed();
         escapeRequested = false;
         // Back leaves without an answer: declining is an answer, and ends the offer.
         bool leave = false;
-        const float promptWidth = keyPrompt("Esc", "360_B", "Leave without answering", ImVec2(-1e5f, -1e5f));
+        const float promptWidth = keyPrompt("Esc", "360_B", "不作答并离开", ImVec2(-1e5f, -1e5f));
         keyPrompt("Esc", "360_B", "Leave without answering",
                   ImVec2(at.x + (width - promptWidth) / 2, buttons.y + 56 * scale), &leave, "leave-rule");
         if ((back || leave) && ready) {
@@ -116,7 +116,7 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
     const float panel = std::min(400 * scale, size.x * .31f), gutter = 40 * scale, left = size.x - panel - gutter;
     // Left: the deck you will play.
     float y = top;
-    text(ImVec2(at.x, y + 7 * scale), "Deck", 18, palette().muted);
+    text(ImVec2(at.x, y + 7 * scale), "牌组", 18, palette().muted);
     std::vector<std::string> decks;
     int active = 0;
     for (const auto& deck : collection.decks) {
@@ -126,7 +126,7 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
     ImGui::SetCursorScreenPos(ImVec2(at.x + 55 * scale, y));
     if (select("##lobby-deck", active, decks, 295 * scale))
         request({{"action", "select"}, {"deckID", collection.decks[active].id}});
-    if (button("edit-deck", "Edit deck", ImVec2(at.x + left - 125 * scale, y), ImVec2(125, 38) * scale)) {
+    if (button("edit-deck", "编辑牌组", ImVec2(at.x + left - 125 * scale, y), ImVec2(125, 38) * scale)) {
         tab = 1;
         send("browse", "album");
     }
@@ -167,7 +167,7 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
     const ImVec2 terms(at.x + size.x - panel, top);
     const float edge = terms.x - gutter * .5f;
     skinRule(ImVec2(edge, top), ImVec2(edge, footerY - 14 * scale), .45f);
-    textCaps(terms + ImVec2(0, 8 * scale), "Rules of this game", 14, palette().muted, 1.6f);
+    textCaps(terms + ImVec2(0, 8 * scale), "本局规则", 14, palette().muted, 1.6f);
     const int fixed = number(c, "fixedWager", -1),
               affordable = std::max(0, std::min({number(c, "gold"), number(c, "rivalGold"), number(c, "maxWager")}));
     if (fixed < 0 && (wager > affordable || !flag(c, "canStake"))) wager = 0;
@@ -183,7 +183,7 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
     ImGui::EndChild();
     float ay = footerY - 14 * scale - actions + 12 * scale;
     if (stakes) {
-        textCaps(ImVec2(terms.x, ay + 11 * scale), "Wager", 14, palette().muted, 1.6f);
+        textCaps(ImVec2(terms.x, ay + 11 * scale), "赌注", 14, palette().muted, 1.6f);
         if (fixed < 0 && number(c, "maxWager")) {
             std::vector<std::string> amounts;
             std::vector<int> values;
@@ -199,16 +199,16 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
             if (select("##wager", chosen, amounts, 150 * scale)) wager = values[chosen];
             ImGui::EndDisabled();
         } else
-            textRight(ImVec2(terms.x + panel, ay + 8 * scale), fixed > 0 ? std::to_string(fixed) + " gold" : "None", 18,
+            textRight(ImVec2(terms.x + panel, ay + 8 * scale), fixed > 0 ? std::to_string(fixed) + " 金币" : "无", 18,
                       palette().ink);
-        textRight(ImVec2(terms.x + panel, ay + 44 * scale), "You carry " + std::to_string(number(c, "gold")) + " gold",
+        textRight(ImVec2(terms.x + panel, ay + 44 * scale), "你带着 " + std::to_string(number(c, "gold")) + " 金币",
                   15, palette().muted);
         ay += 72 * scale;
     }
     const bool complete = std::all_of(collection.deck.begin(), collection.deck.end(), [](auto id) { return id != 0; });
     const bool ready = !pendingCommand && !offer && !number(c, "ruleRequest") &&
                        (!complete || (flag(c, "canPlay") && fixed <= affordable));
-    if (button("play", complete ? "Play" : "Complete deck", ImVec2(terms.x, ay), ImVec2(panel, 50 * scale), true,
+    if (button("play", complete ? "开始对局" : "补齐牌组", ImVec2(terms.x, ay), ImVec2(panel, 50 * scale), true,
                ready)) {
         if (!complete) {
             tab = 1;
@@ -222,31 +222,32 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
         }
     }
     if (!ready && complete) {
-        auto reason = fixed > affordable ? "Not enough gold for this wager." : label(c, "playUnavailableReason");
+        auto reason = fixed > affordable ? "金币不足以支撑这个赌注。" : label(c, "playUnavailableReason");
         text(ImVec2(terms.x, ay + 56 * scale), reason, 15, palette().muted, panel);
     }
     const auto footer = ImVec2(at.x, footerY);
     line(footer, footer + ImVec2(size.x, 0));
-    if (button("album", "Album", footer + ImVec2(0, 23) * scale, ImVec2(95, 38) * scale)) {
+    if (button("album", "相册", footer + ImVec2(0, 23) * scale, ImVec2(95, 38) * scale)) {
         tab = 0;
         send("browse", "album");
     }
-    if (button("lobby-rules", "Rules", footer + ImVec2(105, 23) * scale, ImVec2(95, 38) * scale)) {
+    if (button("lobby-rules", "规则", footer + ImVec2(105, 23) * scale, ImVec2(95, 38) * scale)) {
         showRuleReference = true;
         topic = "play";
         demoStep = 0;
         demoSelected = false;
     }
     if (flag(culture, "canAbolish")) {
-        if (button("abolish-menu", "Challenge a rule", footer + ImVec2(210, 23) * scale, ImVec2(165, 38) * scale))
-            ImGui::OpenPopup("Abolish a rule");
-        if (ImGui::BeginPopup("Abolish a rule")) {
+        if (button("abolish-menu", "挑战规则", footer + ImVec2(210, 23) * scale, ImVec2(165, 38) * scale))
+            ImGui::OpenPopup("废除规则");
+        if (ImGui::BeginPopup("废除规则")) {
             const unsigned allowed = number(culture, "abolishableRules");
             for (auto [bit, name] : ruleNames)
                 if (allowed & bit)
-                    if (ImGui::Selectable(name)) {
-                        confirm("Challenge " + std::string(name) + "?", "Win to try abolishing this rule in the hold.",
-                                "culture", "abolish " + std::to_string(bit), "Challenge");
+                    const auto shown = zhRuleName(name);
+                    if (ImGui::Selectable((shown + "##" + name).c_str())) {
+                        confirm("挑战“" + shown + "”？", "获胜即可尝试在本领地废除该规则。",
+                                "culture", "abolish " + std::to_string(bit), "挑战");
                     }
             ImGui::EndPopup();
         }
@@ -254,11 +255,11 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
         // A challenge, won or lost, closes the next one for seven days. Say when it opens.
         const int days = (number(culture, "retryHours") + 23) / 24;
         text(footer + ImVec2(210, 32) * scale,
-             "Rule challenges open again in " + std::to_string(days) + (days == 1 ? " day" : " days"), 15,
+             "规则挑战将在 " + std::to_string(days) + " 天后重新开放", 15,
              palette().muted);
     }
     if (number(c, "ruleLesson") || number(member(member(state, "settings"), "development"), "RuleLesson"))
-        if (button("lesson", "Practice rule", footer + ImVec2(390, 23) * scale, ImVec2(150, 38) * scale))
+        if (button("lesson", "练习规则", footer + ImVec2(390, 23) * scale, ImVec2(150, 38) * scale))
             send("rule-lesson");
 }
 void GameApp::place(int hand, int square) {
@@ -280,19 +281,19 @@ void GameApp::place(int hand, int square) {
 }
 void GameApp::groupModal() {
     if (groupHand < 0) return;
-    if (!ImGui::IsPopupOpen("Choose group")) ImGui::OpenPopup("Choose group");
+    if (!ImGui::IsPopupOpen("选择分组")) ImGui::OpenPopup("选择分组");
     ImGui::SetNextWindowPos(ImGui::GetIO().DisplaySize * .5f, ImGuiCond_Always, ImVec2(.5f, .5f));
     ImGui::SetNextWindowSize(ImVec2(460 * scale, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(25, 25) * scale);
-    if (ImGui::BeginPopupModal("Choose group", nullptr,
+    if (ImGui::BeginPopupModal("选择分组", nullptr,
                                ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | popupFlags())) {
         popupSurface();
-        textBlock(number(state, "rules") & 128 ? "Choose the Legion group" : "Choose the Decimation group", 400 * scale,
+        textBlock(number(state, "rules") & 128 ? "选择军团分组" : "选择减损分组", 400 * scale,
                   26, palette().accent);
         ImGui::Dummy(ImVec2(0, 15 * scale));
         for (int g : groupChoices) {
             auto p = ImGui::GetCursorScreenPos();
-            if (button(("group" + std::to_string(g)).c_str(), ttcg::creatureGroups[g].data(), p,
+            if (button(("group" + std::to_string(g)).c_str(), std::string(ttcg::zhGroupName(g)).c_str(), p,
                        ImVec2(400, 40) * scale)) {
                 send("play", std::to_string(groupHand) + " " + std::to_string(groupSquare) + " " + std::to_string(g));
                 groupHand = -1;
@@ -300,7 +301,7 @@ void GameApp::groupModal() {
                 break;
             }
         }
-        if (action("Cancel") || backPressed()) {
+        if (action("取消") || backPressed()) {
             groupHand = -1;
             ImGui::CloseCurrentPopup();
         }
@@ -574,7 +575,7 @@ std::pair<ImVec2, ImVec2> GameApp::table(const Json& data, ImVec2 at, ImVec2 siz
                             false, CardContext::Hand);
             }
             if (forced >= 0 && player == 0 && forced == h)
-                text(pos + ImVec2(hw / 2, hh - 20 * scale), number(data, "rules") & 512 ? "Order" : "Chaos", 15,
+                text(pos + ImVec2(hw / 2, hh - 20 * scale), number(data, "rules") & 512 ? "顺序" : "混乱", 15,
                      palette().accent, 0, true);
             ImGui::PopID();
         }
@@ -786,16 +787,16 @@ void GameApp::matchPanel(ImVec2 at, ImVec2 size) {
     // Whose move it is reads from the middle of the table, in that player's colour.
     const bool thinking = flag(state, "thinking"), yours = number(state, "turn") == 0;
     const auto status = label(state, "phase") == "result" ? std::string()
-                        : thinking                        ? label(state, "opponent") + " is thinking…"
-                        : yours                           ? std::string("Your turn")
-                                                          : label(state, "opponent") + "’s turn";
+                        : thinking                        ? label(state, "opponent") + " 正在思考…"
+                        : yours                           ? std::string("你的回合")
+                                                          : label(state, "opponent") + " 的回合";
     if (!status.empty() && !presentation.pending(state))
         text(ImVec2(boardAt.x + boardSize.x * .5f, foot.y - 7 * scale), status, 21, controlColour(yours ? 0 : 1, true),
              0, true);
     const auto group = label(state, "activeGroup");
     if (!group.empty())
-        text(foot, group + " " + (number(state, "groupModifier") > 0 ? "+1" : "−1"), 18, palette().accent);
-    if (button("reference", "Rules", foot + ImVec2(size.x - 100 * scale, -7 * scale), ImVec2(100, 32) * scale, false,
+        text(foot, ttcg::zhGroupText(group) + " " + (number(state, "groupModifier") > 0 ? "+1" : "−1"), 18, palette().accent);
+    if (button("reference", "规则", foot + ImVec2(size.x - 100 * scale, -7 * scale), ImVec2(100, 32) * scale, false,
                !presentation.pending(state))) {
         showRuleReference = true;
         demoStep = 0;
@@ -815,7 +816,7 @@ void GameApp::matchPanel(ImVec2 at, ImVec2 size) {
                         number(state, "turn"));
             return;
         } else {
-            callout = number(state, "turn") == 0 ? "You start" : label(state, "opponent") + " starts";
+            callout = number(state, "turn") == 0 ? "你先手" : label(state, "opponent") + " 先手";
             tone = "first";
             start = swap + 1.15;
             duration = 1.1;

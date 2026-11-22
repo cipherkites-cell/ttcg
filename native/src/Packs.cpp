@@ -2,7 +2,7 @@
 
 namespace preview {
 namespace {
-const char* packName(unsigned kind) { return kind ? "Tournament pack" : "Card pack"; }
+const char* packName(unsigned kind) { return kind ? "锦标赛卡包" : "卡包"; }
 void fitImage(Texture texture, ImVec2 at, ImVec2 size) {
     if (!texture.id) return;
     const float zoom = std::min(size.x / texture.width, size.y / texture.height);
@@ -24,8 +24,8 @@ float App::packStrip(ImVec2 at, float width) {
         draw->AddRect(pos, pos + ImVec2(tile, height), palette().line, 3 * scale);
         fitImage(assets.pack(kind), pos + ImVec2(8, 4) * scale, ImVec2(46, 54) * scale);
         text(pos + ImVec2(64, 9) * scale, packName(kind), 18, palette().ink);
-        text(pos + ImVec2(64, 34) * scale, std::to_string(collection.packs[kind]) + " unopened", 15, palette().muted);
-        if (button(kind ? "open-pack-tournament" : "open-pack", collection.busy ? "Opening…" : "Open",
+        text(pos + ImVec2(64, 34) * scale, std::to_string(collection.packs[kind]) + " 个未开", 15, palette().muted);
+        if (button(kind ? "open-pack-tournament" : "open-pack", collection.busy ? "开启中…" : "开启",
                    pos + ImVec2(tile - 104 * scale, 13 * scale), ImVec2(94, 36) * scale, true, enabled))
             request({{"action", "open-pack"}, {"kind", kind}});
         x += tile + 14 * scale;
@@ -33,7 +33,7 @@ float App::packStrip(ImVec2 at, float width) {
     return height + 14 * scale;
 }
 void App::packModal() {
-    if (collection.revealID && !ImGui::IsPopupOpen("Pack contents")) ImGui::OpenPopup("Pack contents");
+    if (collection.revealID && !ImGui::IsPopupOpen("卡包内容")) ImGui::OpenPopup("Pack contents");
     const auto display = ImGui::GetIO().DisplaySize;
     const int count = int(collection.revealed.size()), columns = count > 5 ? 4 : std::max(1, count),
               rows = (count + columns - 1) / columns;
@@ -41,7 +41,7 @@ void App::packModal() {
                       std::min(display.y - 90 * scale, (rows > 1 ? 840 : 610) * scale));
     ImGui::SetNextWindowPos(display * .5f, ImGuiCond_Always, ImVec2(.5f, .5f));
     ImGui::SetNextWindowSize(size);
-    if (!ImGui::BeginPopupModal("Pack contents", nullptr,
+    if (!ImGui::BeginPopupModal("卡包内容", nullptr,
                                 ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | popupFlags()))
         return;
     popupSurface();
@@ -56,7 +56,7 @@ void App::packModal() {
                               ((size.y - 202 * scale) / std::max(1, rows) - 38 * scale) * .75f}),
                 h = w / .75f;
     const float rowWidth = columns * w + (columns - 1) * gap;
-    text(at + ImVec2(size.x * .5f, 28 * scale), count == 8 ? "Starter cards" : packName(collection.revealKind), 32,
+    text(at + ImVec2(size.x * .5f, 28 * scale), count == 8 ? "起始卡牌" : packName(collection.revealKind), 32,
          palette().accent, 0, true);
     line(at + ImVec2(30, 77) * scale, at + ImVec2(size.x - 30 * scale, 77 * scale));
     const float rowY = at.y + 105 * scale;
@@ -128,7 +128,7 @@ void App::packModal() {
     const bool accept = ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_Space, false) ||
                         ImGui::IsKeyPressed(ImGuiKey_GamepadFaceDown, false);
     const bool back = !inspecting && backPressed();
-    const bool pressed = button("pack-continue", revealing ? "Reveal all" : "Continue",
+    const bool pressed = button("pack-continue", revealing ? "全部翻开" : "继续",
                                 at + ImVec2((size.x - 180 * scale) * .5f, size.y - 66 * scale), ImVec2(180, 42) * scale,
                                 true, !collection.busy);
     if (revealing) {

@@ -47,6 +47,24 @@ inline const auto ruleNames = [] {
     for (unsigned i = 0; i < result.size(); ++i) result[i] = {ttcg::ruleFlags[i], ttcg::ruleName(ttcg::ruleFlags[i])};
     return result;
 }();
+// The rules themselves keep their English names: they are flags, save-file bits and
+// the keys rules.json pages are found by. Only the drawn label is Chinese.
+inline const char* zhTradeName(int value) {
+    static const char* names[]{"无", "一张", "分差", "直接", "全部"};
+    return names[std::clamp(value, 0, 4)];
+}
+inline std::string zhRuleName(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 19> table{{
+        {"How to play", "玩法说明"}, {"Vanguard", "先锋"}, {"Open", "明牌"}, {"Three Open", "三明牌"},
+        {"Same", "相同"}, {"Same Wall", "同墙"}, {"Plus", "相加"}, {"Reverse", "逆转"},
+        {"Fallen Ace", "落难王牌"}, {"Affinity", "亲和"}, {"Legion", "军团"}, {"Decimation", "减损"},
+        {"Order", "顺序"}, {"Chaos", "混乱"}, {"Swap", "交换"}, {"Sudden Death", "骤死"},
+        {"Ascension", "升格"}, {"Descension", "降格"}, {"Dominion", "统御"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
 inline const char* tradeName(int value) {
     static const char* names[]{"None", "One", "Diff", "Direct", "All"};
     return names[std::clamp(value, 0, 4)];

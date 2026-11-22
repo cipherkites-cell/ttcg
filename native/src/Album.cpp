@@ -1,4 +1,5 @@
 #include "App.h"
+#include "ChineseText.h"
 #include <cstdio>
 
 namespace preview {
@@ -105,7 +106,7 @@ void App::cardGrid(ImVec2 at, ImVec2 size, bool changed) {
             ImGui::Dummy(ImVec2(0, 0));
         }
     if (count == 0)
-        text(ImGui::GetCursorScreenPos() + ImVec2(10, 30) * scale, "No matching cards", 26, palette().muted);
+        text(ImGui::GetCursorScreenPos() + ImVec2(10, 30) * scale, "没有匹配的卡", 26, palette().muted);
     gridFade(edges);
     ImGui::EndChild();
 }
@@ -125,11 +126,11 @@ bool App::addToDeck(ttcg::CardID id) {
     for (int i = 0; slot < 0 && i < 5; ++i)
         if (!collection.deck[i]) slot = i;
     if (slot < 0) {
-        collection.notice = "The deck is full. Choose the slot to replace first.";
+        collection.notice = "牌组已满，请先选择要替换的槽位。";
         return false;
     }
     if (!collection.canUse(id, slot)) {
-        collection.notice = "That card cannot fill this slot. Check your owned copies and the deck limit.";
+        collection.notice = "这张卡无法放入该槽位。请检查拥有数量与牌组上限。";
         return false;
     }
     auto hand = collection.deck;
@@ -179,7 +180,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
             const auto count = std::count_if(deck.cards.begin(), deck.cards.end(), [](auto id) { return id != 0; });
             names.push_back(deck.name + (count < 5 ? "  (" + std::to_string(count) + "/5)" : ""));
         }
-        if (names.empty()) names.push_back("Your deck");
+        if (names.empty()) names.push_back("你的牌组");
         ImGui::SetCursorScreenPos(at);
         ImGui::BeginDisabled(!editable || collection.decks.size() < 2);
         if (select("##deck-pick", chosen, names, side - 48 * scale) && chosen < int(collection.decks.size()))
@@ -188,14 +189,14 @@ void App::decks(ImVec2 at, ImVec2 size) {
         if (button("new-deck", "+", at + ImVec2(side - 40 * scale, 0), ImVec2(40, 38) * scale, false,
                    editable && collection.decks.size() < collection.maxDecks)) {
             deckDialog = "new";
-            std::snprintf(deckName, sizeof(deckName), "Deck %zu", collection.decks.size() + 1);
+            std::snprintf(deckName, sizeof(deckName), "牌组 %zu", collection.decks.size() + 1);
         }
-        itemTooltip("New deck");
+        itemTooltip("新建牌组");
     }
     {
         const float each = (side - 16 * scale) / 3;
         const ImVec2 row = at + ImVec2(0, 46 * scale);
-        if (button("rename", "Rename", row, ImVec2(each, 32 * scale), false,
+        if (button("rename", "重命名", row, ImVec2(each, 32 * scale), false,
                    editable && active != collection.decks.end()) &&
             !renamingDeck) {
             renamingDeck = true;
@@ -205,7 +206,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
         }
         int n = 1;
         for (const auto& item :
-             std::array<std::pair<const char*, const char*>, 2>{{{"copy", "Copy"}, {"delete", "Delete"}}}) {
+             std::array<std::pair<const char*, const char*>, 2>{{{"copy", "复制"}, {"delete", "删除"}}}) {
             const bool enabled =
                 editable && (std::string_view(item.first) != "delete" || collection.decks.size() > 1) &&
                 (std::string_view(item.first) != "copy" || collection.decks.size() < collection.maxDecks);
@@ -300,7 +301,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
                 }
             std::string group;
             for (unsigned g = 0; g < ttcg::creatureGroups.size(); ++g)
-                if (c.groups & (1ull << g)) group += (group.empty() ? "" : ", ") + std::string(ttcg::creatureGroups[g]);
+                if (c.groups & (1ull << g)) group += (group.empty() ? "" : "、") + std::string(ttcg::zhGroupName(g));
             text(ImVec2(ix + (ix > textX ? 4 * scale : 0), ty + 49 * scale), group, 15, palette().muted);
             d->PopClipRect();
             // The four ranks again, at a size that reads without leaning in.
@@ -315,7 +316,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
         } else {
             d->AddRect(art, art + ImVec2(cw, ch), slot == next ? palette().muted : palette().line, 2 * scale);
             text(art + ImVec2(cw * .5f, ch * .5f - 15 * scale), "+", 26, palette().muted, 0, true);
-            text(ImVec2(textX, pos.y + extent.y * .5f - 24 * scale), collection.deck[slot] ? "Unavailable" : "Empty",
+            text(ImVec2(textX, pos.y + extent.y * .5f - 24 * scale), collection.deck[slot] ? "不可用" : "空位",
                  18, palette().muted);
             text(ImVec2(textX, pos.y + extent.y * .5f + 3 * scale), place, 15, palette().muted);
         }
@@ -324,7 +325,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
     // One reserved strip: choosing a slot never moves the rest of the panel.
     const float y = slotsTop + 5 * rowH + 2 * scale;
     if (deckSlot >= 0) {
-        text(ImVec2(at.x, y + 6 * scale), "Slot " + std::to_string(deckSlot + 1), 15, palette().muted);
+        text(ImVec2(at.x, y + 6 * scale), "槽位 " + std::to_string(deckSlot + 1), 15, palette().muted);
         const auto move = [&](const char* id, const char* label, float x, int to) {
             if (button(id, label, ImVec2(at.x + side - x * scale, y), ImVec2(38, 32) * scale, false,
                        editable && to >= 0 && to < 5)) {
@@ -388,7 +389,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
             const ImVec2 pos(ax, summary.y + 40 * scale);
             ImGui::SetCursorScreenPos(pos);
             ImGui::InvisibleButton(("deck-affinity-" + std::to_string(a)).c_str(), ImVec2(35, 22) * scale);
-            itemTooltip(std::string(ttcg::attributeNames[a]) + ": " + std::to_string(affinities[a]));
+            itemTooltip(std::string(ttcg::zhAffinityName(static_cast<std::size_t>(a))) + "：" + std::to_string(affinities[a]));
             auto icon = assets.get("../icons/affinity-" + std::to_string(a) + ".png");
             d->AddImage(icon.id, pos, pos + ImVec2(20, 20) * scale);
             text(pos + ImVec2(23, 2) * scale, std::to_string(affinities[a]), 15, palette().muted);
@@ -411,18 +412,18 @@ void App::decks(ImVec2 at, ImVec2 size) {
 void App::pickerFilters(ImVec2 at, float width) {
     ImGui::SetCursorScreenPos(at);
     ImGui::SetNextItemWidth(width);
-    if (ImGui::InputTextWithHint("##deck-search", "Search cards", query, sizeof(query))) refreshFilter();
+    if (ImGui::InputTextWithHint("##deck-search", "搜索卡牌", query, sizeof(query))) refreshFilter();
 }
 void App::deckModal() {
-    if (!deckDialog.empty() && !ImGui::IsPopupOpen("Deck")) ImGui::OpenPopup("Deck");
+    if (!deckDialog.empty() && !ImGui::IsPopupOpen("牌组")) ImGui::OpenPopup("牌组");
     ImGui::SetNextWindowPos(ImGui::GetIO().DisplaySize * .5f, ImGuiCond_Always, ImVec2(.5f, .5f));
     ImGui::SetNextWindowSize(ImVec2(470, 210) * scale);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(24, 24) * scale);
-    if (ImGui::BeginPopupModal("Deck", nullptr,
+    if (ImGui::BeginPopupModal("牌组", nullptr,
                                ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | popupFlags())) {
         popupSurface();
         const bool remove = deckDialog == "delete";
-        std::string name = "this deck";
+        std::string name = "这个牌组";
         for (const auto& deck : collection.decks)
             if (deck.id == collection.activeDeck) name = deck.name;
         const float room = 422 * scale;
@@ -431,15 +432,15 @@ void App::deckModal() {
             text(at, value, pixels, colour, room);
             ImGui::Dummy(ImVec2(room, font()->CalcTextSizeA(pixels * scale, 1e5f, room, value.c_str()).y));
         };
-        say(remove                 ? "Delete " + name + "?"
-            : deckDialog == "new"  ? "New deck"
-            : deckDialog == "copy" ? "Copy " + name
-                                   : "Rename " + name,
+        say(remove                 ? "删除 " + name + "？"
+            : deckDialog == "new"  ? "新建牌组"
+            : deckDialog == "copy" ? "复制 " + name
+                                   : "重命名 " + name,
             21, palette().accent);
         ImGui::Dummy(ImVec2(1, 12 * scale));
         bool enter = false;
         if (remove)
-            say("Your cards stay in the album.", 18, palette().ink);
+            say("卡牌仍留在相册里。", 18, palette().ink);
         else {
             ImGui::SetNextItemWidth(-1);
             if (ImGui::IsWindowAppearing()) ImGui::SetKeyboardFocusHere();
@@ -447,10 +448,10 @@ void App::deckModal() {
         }
         ImGui::Dummy(ImVec2(1, 12 * scale));
         const auto pos = ImGui::GetCursorScreenPos();
-        if (button("cancel", "Cancel", pos, ImVec2(180, 39) * scale) || backPressed()) {
+        if (button("cancel", "取消", pos, ImVec2(180, 39) * scale) || backPressed()) {
             deckDialog.clear();
             ImGui::CloseCurrentPopup();
-        } else if (button("save-deck", remove ? "Delete" : "Save", pos + ImVec2(215, 0) * scale,
+        } else if (button("save-deck", remove ? "删除" : "保存", pos + ImVec2(215, 0) * scale,
                           ImVec2(180, 39) * scale, true,
                           !collection.busy && (remove || ttcg::validDeckName(deckName))) ||
                    enter) {

@@ -8,11 +8,11 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     const auto& all = arrayMember(data, "events");
     const float nav = AlbumLayout::navigation * scale, gap = AlbumLayout::gap * scale;
     line(at + ImVec2(nav + gap / 2, 0), at + ImVec2(nav + gap / 2, size.y));
-    if (button("available", "Available", at, ImVec2(103, 35) * scale, !history)) {
+    if (button("available", "可参加", at, ImVec2(103, 35) * scale, !history)) {
         history = false;
         eventID = 0;
     }
-    if (button("history", "History", at + ImVec2(111, 0) * scale, ImVec2(85, 35) * scale, history)) {
+    if (button("history", "历史", at + ImVec2(111, 0) * scale, ImVec2(85, 35) * scale, history)) {
         history = true;
         eventID = 0;
     }
@@ -53,7 +53,7 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     const float width = size.x - nav - gap;
     const auto* current = tournament(eventID);
     if (!current) {
-        text(origin, history ? "No tournament history" : "Speak with an innkeeper to find and enter tournaments.", 21,
+        text(origin, history ? "没有锦标赛记录" : "和旅店老板交谈即可查找并报名锦标赛。", 21,
              palette().muted, width);
         return;
     }
@@ -75,7 +75,7 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     text(origin + ImVec2(0, 44) * scale, label(e, "venue") + " · " + label(e, "host"), 18, palette().muted);
     line(origin + ImVec2(0, 82) * scale, origin + ImVec2(width, 82 * scale));
     ruleChips(origin + ImVec2(0, 91) * scale, width, number(e, "rules"), -1, false, true);
-    text(origin + ImVec2(0, 135) * scale, (champion ? "Ended " : "Closes ") + label(e, "endsLabel"), 15,
+    text(origin + ImVec2(0, 135) * scale, (champion ? "已结束 " : "截止 ") + label(e, "endsLabel"), 15,
          palette().muted);
     const float prizes = 205 * scale, boardW = width - prizes - gap, top = 185 * scale,
                 availableH = size.y - top - 90 * scale, colGap = 15 * scale, colW = (boardW - 2 * colGap) / 3;
@@ -109,7 +109,7 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
                 const auto row = pos + ImVec2(0, side * pairH / 2);
                 if (number(player, "id") == 20)
                     d->AddRectFilled(row, row + ImVec2(colW, pairH / 2), (palette().selection & 0xffffff) | 0x55000000);
-                text(row + ImVec2(10, 10) * scale, flag(player, "reserved") ? "Open" : label(player, "name"), 15,
+                text(row + ImVec2(10, 10) * scale, flag(player, "reserved") ? "已预留" : label(player, "name"), 15,
                      wins == 2 ? palette().accent : palette().ink, colW - 40 * scale);
                 if (number(player, "id"))
                     text(row + ImVec2(colW - 24 * scale, 10 * scale), std::to_string(wins), 18, palette().muted);
@@ -118,8 +118,8 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     }
     const auto prizeAt = origin + ImVec2(width - prizes, top);
     line(prizeAt - ImVec2(gap / 2, 15 * scale), prizeAt + ImVec2(-gap / 2, availableH));
-    textCaps(prizeAt, "Prize", 13.5f, palette().muted, 1.6f);
-    text(prizeAt + ImVec2(0, 26) * scale, std::to_string(number(e, "purse")) + " gold", 26, skin().value);
+    textCaps(prizeAt, "奖金", 13.5f, palette().muted, 1.6f);
+    text(prizeAt + ImVec2(0, 26) * scale, std::to_string(number(e, "purse")) + " 金币", 26, skin().value);
     text(prizeAt + ImVec2(0, 62) * scale, label(e, "prize"), 18, palette().ink, prizes);
     if (arrayMember(e, "prizeCards").empty())
         if (const auto pack = assets.pack(1); pack.id) {
@@ -143,7 +143,7 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
         ++pindex;
     }
     if (number(e, "fee") && !flag(e, "joined"))
-        text(prizeAt + ImVec2(0, availableH - 20 * scale), "Entry: " + std::to_string(number(e, "fee")) + " gold", 15,
+        text(prizeAt + ImVec2(0, availableH - 20 * scale), "报名费：" + std::to_string(number(e, "fee")) + " 金币", 15,
              palette().muted);
     const auto footer = origin + ImVec2(0, size.y - 63 * scale);
     line(footer, footer + ImVec2(width, 0));
@@ -173,12 +173,12 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     text(footer + ImVec2(0, play && !hasInterrupted ? -28 : 23) * scale, reason, 15, palette().muted,
          width - 250 * scale);
     if (play && !hasInterrupted) {
-        if (button("tournament-deck", "Edit deck", footer + ImVec2(0, 20) * scale, ImVec2(110, 36) * scale)) {
+        if (button("tournament-deck", "编辑牌组", footer + ImVec2(0, 20) * scale, ImVec2(110, 36) * scale)) {
             tab = 1;
             screen = 3;
         }
-        if (button("withdraw", "Withdraw", footer + ImVec2(120, 20) * scale, ImVec2(110, 36) * scale))
-            confirm("Withdraw from tournament?",
+        if (button("withdraw", "退赛", footer + ImVec2(120, 20) * scale, ImVec2(110, 36) * scale))
+            confirm("要退出锦标赛吗？",
                     number(e, "fee") ? "Your entry fee will not be refunded." : "This ends your tournament run.",
                     "tournament", "withdraw " + std::to_string(eventID), "Withdraw");
     }
@@ -285,7 +285,7 @@ void GameApp::tournamentOutcome() {
             }
         }
         if (upgrades) {
-            textBlock(std::to_string(upgrades) + " foil upgrade" + (upgrades == 1 ? "" : "s") + " remaining",
+            textBlock(std::to_string(upgrades) + " 次闪卡升级机会剩余",
                       width - 60 * scale, 21, palette().accent);
             std::vector<int> options;
             for (int i = 0; i < int(collection.cards.size()); ++i)
@@ -301,7 +301,7 @@ void GameApp::tournamentOutcome() {
                 names.push_back(collection.cards[id].name);
             }
             if (names.empty())
-                textBlock("No cards to upgrade", 500 * scale, 18, palette().muted);
+                textBlock("没有可升级的卡", 500 * scale, 18, palette().muted);
             else {
                 // A grid to pick from, as in the album: a long dropdown can't be worked with a pad.
                 const auto p = ImGui::GetCursorScreenPos();
@@ -341,15 +341,15 @@ void GameApp::tournamentOutcome() {
                         ImGui::Dummy(ImVec2(1, 0));
                     }
                 if (shown.empty())
-                    text(ImGui::GetCursorScreenPos() + ImVec2(0, 20 * scale), "No card of that name", 18,
+                    text(ImGui::GetCursorScreenPos() + ImVec2(0, 20 * scale), "没有这张卡", 18,
                          palette().muted);
                 ImGui::EndChild();
                 // The chosen card, and the button that spends an upgrade on it.
                 const auto chosen = p + ImVec2(gridWidth + 20 * scale, 0);
                 displayCard(foilSelection, chosen, ImVec2(156, 208) * scale, false, -1, MaterialSlot::foilChoice);
-                text(chosen + ImVec2(0, 216 * scale), fitted(collection.cards[foilSelection].name, 17, side), 18,
+                text(chosen + ImVec2(0, 216 * scale), fitted(ttcg::zhCardName(collection.cards[foilSelection].name), 17, side), 18,
                      palette().ink);
-                if (button("upgrade", "Make foil", chosen + ImVec2(0, 250) * scale, ImVec2(200, 43) * scale, true,
+                if (button("upgrade", "制成闪卡", chosen + ImVec2(0, 250) * scale, ImVec2(200, 43) * scale, true,
                            !pendingCommand))
                     send("tournament", "foil " + std::to_string(eventID) + " " + std::to_string(foilSelection));
                 ImGui::SetCursorScreenPos(p + ImVec2(0, gridHeight + 8 * scale));
@@ -360,16 +360,16 @@ void GameApp::tournamentOutcome() {
         line(bottom - ImVec2(0, 15 * scale), bottom + ImVec2(width - 60 * scale, -15 * scale));
         const auto leave = [&](std::string action) {
             if (upgrades)
-                confirm("Leave " + std::to_string(upgrades) + " foil upgrades unused?", "They will be lost.",
+                confirm("还剩 " + std::to_string(upgrades) + " 次闪卡升级未使用，确定离开？", "这些机会将作废。",
                         "tournament", action + " " + std::to_string(eventID), "Leave");
             else
                 send("tournament", action + " " + std::to_string(eventID));
         };
-        if (button("leave-tournament", "Leave", bottom, ImVec2(110, 40) * scale)) {
+        if (button("leave-tournament", "离开", bottom, ImVec2(110, 40) * scale)) {
             leave("leave");
             ImGui::CloseCurrentPopup();
         }
-        if (!over && button("view-bracket", "View bracket", bottom + ImVec2(125, 0) * scale, ImVec2(160, 40) * scale)) {
+        if (!over && button("view-bracket", "查看对阵", bottom + ImVec2(125, 0) * scale, ImVec2(160, 40) * scale)) {
             leave("ack");
             ImGui::CloseCurrentPopup();
         }
@@ -538,7 +538,7 @@ void GameApp::resultModal() {
             }
             if (event) {
                 text(ImVec2(panel.x + extent.x / 2, y), label(*event, "name"), 18, palette().accent, width, true);
-                if (button("tournament-notice", "View tournament",
+                if (button("tournament-notice", "查看锦标赛",
                            ImVec2(panel.x + extent.x / 2 - 95 * scale, y + 28 * scale), ImVec2(190, 36) * scale)) {
                     eventID = number(*event, "id");
                     send("tournament", "board");
@@ -548,11 +548,11 @@ void GameApp::resultModal() {
             }
             const float total = (can ? 340 : 150) * scale;
             const auto buttons = ImVec2(panel.x + (extent.x - total) / 2, panel.y + extent.y - 80 * scale);
-            if (can && button("rematch", "Play again", buttons, ImVec2(172, 42) * scale, true, !pendingCommand)) {
+            if (can && button("rematch", "再来一局", buttons, ImVec2(172, 42) * scale, true, !pendingCommand)) {
                 send("prepare");
                 ImGui::CloseCurrentPopup();
             }
-            if (button("leave", "Leave", buttons + ImVec2(can ? 190 * scale : 0, 0), ImVec2(150, 42) * scale, !can) ||
+            if (button("leave", "离开", buttons + ImVec2(can ? 190 * scale : 0, 0), ImVec2(150, 42) * scale, !can) ||
                 backPressed()) {
                 send("close");
                 ImGui::CloseCurrentPopup();
@@ -572,7 +572,7 @@ void GameApp::resultModal() {
             const bool selectable = trade.phase == TradeView::Selecting && !pendingCommand;
             for (int player = 0; player < 2; ++player) {
                 const float y = origin.y + (64 + (1 - player) * 268) * scale;
-                text(ImVec2(left, y), player ? label(state, "opponent") : "You", 21, palette().muted);
+                text(ImVec2(left, y), player ? label(state, "opponent") : "你", 21, palette().muted);
                 for (int slot = 0; slot < 5; ++slot) {
                     const int index = player * 5 + slot, id = hands.is_array() ? itemNumber(hands[player], slot) : -1;
                     if (id < 0) continue;
@@ -620,14 +620,14 @@ void GameApp::resultModal() {
                 x += keyPrompt("Mouse1", "360_A", "Select", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
                 x += keyPrompt("Mouse2", "360_Y", "Inspect", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
                 if (choice)
-                    text(ImVec2(x, footer.y + 11 * scale), "Choose your winnings to go on.", 15, palette().muted);
+                    text(ImVec2(x, footer.y + 11 * scale), "选择要带走的战利品。", 15, palette().muted);
             }
-            if (button("trade-inspect", "Inspect", footer + ImVec2(width - 302 * scale, 0), ImVec2(126, 40) * scale)) {
+            if (button("trade-inspect", "查看", footer + ImVec2(width - 302 * scale, 0), ImVec2(126, 40) * scale)) {
                 const int index = trade.inspected;
                 inspectCard(itemNumber(hands[index / 5], index % 5));
             }
             if (choice || paying)
-                if (button("take-cards", paying ? "Retry" : "Confirm", footer + ImVec2(width - 150 * scale, 0),
+                if (button("take-cards", paying ? "重试" : "确认", footer + ImVec2(width - 150 * scale, 0),
                            ImVec2(150, 40) * scale, true,
                            paying || selectable && std::popcount(claimMask) == required)) {
                     if (paying)
@@ -637,7 +637,7 @@ void GameApp::resultModal() {
                 }
             // Cards taken by a rule or by the opponent stay up until the player has seen them.
             if (trade.phase == TradeView::Reviewing && settled && !trade.chose && transfers > 0)
-                if (button("trade-continue", "Continue", footer + ImVec2(width - 150 * scale, 0),
+                if (button("trade-continue", "继续", footer + ImVec2(width - 150 * scale, 0),
                            ImVec2(150, 40) * scale, true))
                     trade.acknowledged = true;
             // Render the gathering flights above the panel, at full colour.

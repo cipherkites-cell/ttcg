@@ -1,13 +1,14 @@
 #include "GameApp.h"
+#include "ChineseText.h"
 namespace preview {
 void GameApp::shop(ImVec2 at, ImVec2 size) {
     const auto& s = member(state, "shop");
     text(at, label(s, "name"), 32, palette().accent);
-    if (flag(s, "specialist")) text(at + ImVec2(0, 44) * scale, "Specialist card dealer", 18, palette().muted);
-    text(at + ImVec2(size.x - 360 * scale, 3 * scale), std::to_string(number(s, "gold")) + " gold", 21, palette().ink);
+    if (flag(s, "specialist")) text(at + ImVec2(0, 44) * scale, "专营卡商", 18, palette().muted);
+    text(at + ImVec2(size.x - 360 * scale, 3 * scale), std::to_string(number(s, "gold")) + " 金币", 21, palette().ink);
     text(at + ImVec2(size.x - 360 * scale, 35 * scale),
-         "Merchant: " + std::to_string(number(s, "merchantGold")) + " gold", 18, palette().muted);
-    const char* tabs[]{"Buy", "Sell", "Buy back"};
+         "商人：" + std::to_string(number(s, "merchantGold")) + " 金币", 18, palette().muted);
+    const char* tabs[]{"购买", "出售", "回购"};
     // Bumpers, or Q and E, step through the three lists, as they do through the album's tabs.
     if (!popupBeforeFrame && !ImGui::GetIO().WantTextInput && !inspecting &&
         !ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel)) {
@@ -29,13 +30,14 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
         }
     auto top = at + ImVec2(0, 144) * scale;
     const float right = AlbumLayout::preview * scale, gap = AlbumLayout::gap * scale, width = size.x - right - gap;
-    const std::vector<std::string> tiers = tierChoices("All tiers"),
-                                   rarities{"All rarities", "Common", "Rare", "Epic", "Legendary"};
+    const std::vector<std::string> tiers = tierChoices("全部阶级"),
+                                   rarities{"全部稀有度", "普通", "稀有", "史诗", "传说"},
+                                   rarityKeys{"", "Common", "Rare", "Epic", "Legendary"};
     const float tierWidth = choiceWidth(tiers), rarityWidth = choiceWidth(rarities),
                 filterX = width - tierWidth - rarityWidth - 12 * scale;
     ImGui::SetCursorScreenPos(top);
     ImGui::SetNextItemWidth(filterX - 18 * scale);
-    ImGui::InputTextWithHint("##shop-search", "Search cards", shopQuery, sizeof(shopQuery));
+    ImGui::InputTextWithHint("##shop-search", "搜索卡牌", shopQuery, sizeof(shopQuery));
     ImGui::SetCursorScreenPos(top + ImVec2(filterX, 0));
     select("##shop-tier", shopTier, tiers, tierWidth);
     ImGui::SetCursorScreenPos(top + ImVec2(width - rarityWidth, 0));
@@ -43,9 +45,9 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
     top.y += 53 * scale;
     if (shopTab == 1) {
         ImGui::SetCursorScreenPos(top);
-        select("##inventory", shopSurplus, {"All cards", "Surplus cards"}, 180 * scale);
+        select("##inventory", shopSurplus, {"全部卡牌", "多余卡牌"}, 180 * scale);
         if (shopSurplus)
-            text(top + ImVec2(200, 8) * scale, "Keeps two standard copies of each card.", 15, palette().muted,
+            text(top + ImVec2(200, 8) * scale, "每张卡保留两份普通版本。", 15, palette().muted,
                  width - 200 * scale);
         top.y += 53 * scale;
     }
@@ -62,10 +64,10 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
             r["price"] = number(row, "salePrice");
         }
         if (number(r, "count") <= 0 || shopTier && card.tier != shopTier ||
-            shopRarity && card.rarity != rarities[shopRarity])
+            shopRarity && card.rarity != rarityKeys[shopRarity])
             continue;
         if (shopQuery[0] &&
-            lower(card.name + " " + join(member(state["cards"][id], "groups")) + " " +
+            lower(ttcg::zhCardName(card.name) + " " + join(member(state["cards"][id], "groups")) + " " +
                   join(member(state["cards"][id], "affinities")) + (id >= int(collection.cards.size()) ? " foil" : ""))
                     .find(lower(shopQuery)) == std::string::npos)
             continue;
@@ -112,7 +114,7 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
                 displayCard(id, pos, ImVec2(w, h),
                             shopSelected == id || (ImGui::IsItemFocused() && ImGui::GetIO().NavVisible), -1,
                             MaterialSlot::gridSlot(material++));
-                text(pos + ImVec2(0, h + 9 * scale), std::to_string(number(entry, "price")) + " gold", 18,
+                text(pos + ImVec2(0, h + 9 * scale), std::to_string(number(entry, "price")) + " 金币", 18,
                      palette().ink);
                 text(pos + ImVec2(w - 57 * scale, h + 9 * scale), "×" + std::to_string(number(entry, "count")), 18,
                      palette().muted);
@@ -123,8 +125,8 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
         }
     if (rows.empty() && shopTab != 2)
         text(ImGui::GetCursorScreenPos() + ImVec2(12, 32) * scale,
-             shopTab == 1 && shopSurplus ? "No surplus cards. Choose All cards to see your collection."
-                                         : "No cards match these filters.",
+             shopTab == 1 && shopSurplus ? "没有多余的卡。切换到“全部卡牌”可查看收藏。"
+                                         : "没有符合筛选条件的卡牌。",
              21, palette().muted, width - 24 * scale);
     gridFade(edges);
     ImGui::EndChild();
@@ -147,8 +149,8 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
     float y = art.y + dh + 14 * scale;
     if (!skinBand("band", ImVec2(detail.x, y), ImVec2(right, 40 * scale)))
         skinBand("selector", ImVec2(detail.x, y), ImVec2(right, 40 * scale));
-    const float fit = std::min(19.f, 19.f * (right - 24 * scale) / std::max(1.f, capsWidth(card.name, 19, 1)));
-    textCaps(ImVec2(detail.x + right / 2, y + (40 - fit * 1.25f) * .5f * scale), card.name, fit, palette().ink, 1,
+    const float fit = std::min(19.f, 19.f * (right - 24 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(card.name), 19, 1)));
+    textCaps(ImVec2(detail.x + right / 2, y + (40 - fit * 1.25f) * .5f * scale), ttcg::zhCardName(card.name), fit, palette().ink, 1,
              true);
     y += 44 * scale;
     y += factRows(card, ImVec2(detail.x + 2 * scale, y), right - 4 * scale, true, true) + 14 * scale;
@@ -158,7 +160,7 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
     shopQuantity = std::clamp(shopQuantity, 1, max);
     if (max > 1) {
         const bool editable = !pendingCommand && !flag(s, "pending");
-        text(ImVec2(detail.x, y + 8 * scale), "Quantity", 18, palette().muted);
+        text(ImVec2(detail.x, y + 8 * scale), "数量", 18, palette().muted);
         const auto controls = ImVec2(detail.x + right - 128 * scale, y);
         ImGui::PushItemFlag(ImGuiItemFlags_ButtonRepeat, true);
         if (button("quantity-less", "−", controls, ImVec2(34, 34) * scale, false, editable && shopQuantity > 1))
@@ -173,10 +175,10 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
     const bool sell = shopTab == 1;
     const int total = price * shopQuantity;
     const bool enough = number(s, sell ? "merchantGold" : "gold") >= total;
-    const auto action = std::string(sell           ? "Sell"
-                                    : shopTab == 2 ? "Buy back"
-                                                   : "Buy") +
-                        " · " + std::to_string(total) + " gold";
+    const auto action = std::string(sell           ? "出售"
+                                    : shopTab == 2 ? "回购"
+                                                   : "购买") +
+                        " · " + std::to_string(total) + " 金币";
     if (button("trade", action.c_str(), ImVec2(detail.x, y), ImVec2(right, 42 * scale), true,
                enough && !pendingCommand && !flag(s, "pending"))) {
         std::string warnings;
@@ -184,28 +186,28 @@ void GameApp::shop(ImVec2 at, ImVec2 size) {
         for (const auto& r : arrayMember(s, "sell"))
             if (number(r, "id") == shopSelected) owned = &r;
         if (sell && owned) {
-            if (number(*owned, "warnings") & 1) warnings += "This is a unique card.\n";
-            if (number(*owned, "warnings") & 2) warnings += "This copy is foil.\n";
+            if (number(*owned, "warnings") & 1) warnings += "这是一张唯一卡。\n";
+            if (number(*owned, "warnings") & 2) warnings += "这张是闪卡版本。\n";
             if (number(*owned, "count") - shopQuantity < number(*owned, "reserved"))
-                warnings += "This sale will leave an empty slot in a saved deck.\n";
+                warnings += "本次出售会让某个已保存牌组出现空位。\n";
             if (number(*owned, "lastHandAt") > 0 && shopQuantity >= number(*owned, "lastHandAt"))
-                warnings += "You won’t have enough cards for a game.";
+                warnings += "之后你的卡牌数量将不足以开始一局对战。";
         }
         const auto args = std::string(sell           ? "sell"
                                       : shopTab == 2 ? "buyback"
                                                      : "buy") +
                           " " + std::to_string(shopSelected) + " " + std::to_string(shopQuantity);
         if (!warnings.empty())
-            confirm("Sell " + card.name + " for " + std::to_string(total) + " gold?", warnings, "shop", args + " 1",
-                    "Sell");
+            confirm("以 " + std::to_string(total) + " 金币出售“" + ttcg::zhCardName(card.name) + "”？", warnings, "shop",
+                    args + " 1", "出售");
         else
             send("shop", args + " 0");
     }
     if (!enough || flag(s, "pending"))
         text(ImVec2(detail.x, y + 56 * scale),
-             flag(s, "pending") ? "Payment is pending. Reopen trading to retry."
-             : sell             ? "The merchant doesn't have enough gold."
-                                : "You don't have enough gold.",
+             flag(s, "pending") ? "交易结算中，重新打开商店后再试。"
+             : sell             ? "商人没有这么多金币。"
+                                : "你的金币不够。",
              18, palette().muted, right);
     // Under the gold totals, clear of the grid, the footer rule and the prompts.
     if (!label(s, "notice").empty())

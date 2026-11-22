@@ -1,4 +1,5 @@
 #include "GameApp.h"
+#include "ChineseText.h"
 #include "Announcements.h"
 #include <cmath>
 #include <numbers>
@@ -30,8 +31,8 @@ void GameApp::nativeInspector() {
     const ImVec2 centre = artAt + ImVec2(w, h) * .5f;
     const auto& c = collection.cards[selected];
     if (!showTableDetails)
-        textCaps(origin + ImVec2(extent.x / 2, 26 * scale), c.name,
-                 std::min(24.f, 24.f * (extent.x - 90 * scale) / std::max(1.f, capsWidth(c.name, 24, 2))),
+        textCaps(origin + ImVec2(extent.x / 2, 26 * scale), ttcg::zhCardName(c.name),
+                 std::min(24.f, 24.f * (extent.x - 90 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(c.name), 24, 2))),
                  palette().ink, 2, true);
     ImGui::SetCursorScreenPos(artAt);
     ImGui::InvisibleButton("rotate-art", ImVec2(w, h), ImGuiButtonFlags_EnableNav);
@@ -85,8 +86,8 @@ void GameApp::nativeInspector() {
     }
     for (int i = first; i < d->VtxBuffer.Size; ++i) d->VtxBuffer[i].pos = project(d->VtxBuffer[i].pos);
     const auto controls = [&](ImVec2 at) {
-        if (button("flip", "Turn over", at, ImVec2(132, 38) * scale)) turnTarget += std::numbers::pi_v<float>;
-        if (button("reset-art", "Reset", at + ImVec2(144, 0) * scale, ImVec2(96, 38) * scale)) turnTarget = pitch = 0;
+        if (button("flip", "翻面", at, ImVec2(132, 38) * scale)) turnTarget += std::numbers::pi_v<float>;
+        if (button("reset-art", "重置", at + ImVec2(144, 0) * scale, ImVec2(96, 38) * scale)) turnTarget = pitch = 0;
     };
     if (showTableDetails) {
         const float infoWidth = 262 * scale, metadataHeight = metadata(c, {}, infoWidth - 12 * scale, false);
@@ -103,13 +104,13 @@ void GameApp::nativeInspector() {
     // Prompts sit where the main window keeps its own.
     bool leave = false;
     const ImVec2 promptAt = origin + ImVec2(30 * scale, extent.y - 44 * scale);
-    keyPrompt("Esc", "360_B", "Close", promptAt, &leave, "close-art");
+    keyPrompt("Esc", "360_B", "关闭", promptAt, &leave, "close-art");
     if (leave) {
         inspecting = false;
         ImGui::CloseCurrentPopup();
     }
     textRight(origin + ImVec2(extent.x - 30 * scale, extent.y - 38 * scale),
-              padPrompts ? "Right stick turns the card" : "Drag the card to turn it", 15, fade(palette().muted, .8f));
+              padPrompts ? "右摇杆旋转卡牌" : "拖动卡牌可旋转", 15, fade(palette().muted, .8f));
     const int selectedDisplay = selected + (selectedFoil ? collection.cards.size() : 0);
     const auto found = std::find(inspectionList.begin(), inspectionList.end(), selectedDisplay);
     if (found != inspectionList.end() && inspectionList.size() > 1) {

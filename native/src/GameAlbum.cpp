@@ -1,4 +1,5 @@
 #include "GameApp.h"
+#include "ChineseText.h"
 #include "Announcements.h"
 #include <bit>
 namespace preview {
@@ -15,8 +16,8 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
         filterDirty = true;
         refreshFilter();
     }
-    const std::vector<std::string> ownership{"Owned", "Discovered", "Missing", "Extras"},
-        tiers = tierChoices("Tier"), sorts{"Low to high", "High to low", "Name", "Quantity", "Rarity"};
+    const std::vector<std::string> ownership{"拥有", "已发现", "缺失", "多余"},
+        tiers = tierChoices("全部阶级"), sorts{"点数升序", "点数降序", "名称", "数量", "稀有度"};
     // The deck editor only offers cards you own, so it has no ownership choice.
     if (editing) filter.ownership = 0;
     const float ownW = editing ? 0 : choiceWidth(ownership) + 10 * scale, tierW = choiceWidth(tiers),
@@ -24,7 +25,7 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
                 searchW = width - ownW - tierW - sortW - 30 * scale - tools;
     ImGui::SetCursorScreenPos(at);
     ImGui::SetNextItemWidth(searchW);
-    ImGui::InputTextWithHint("##search", "Search cards", query, sizeof(query));
+    ImGui::InputTextWithHint("##search", "搜索卡牌", query, sizeof(query));
     float x = searchW + 10 * scale;
     if (!editing) {
         ImGui::SetCursorScreenPos(at + ImVec2(x, 0));
@@ -36,24 +37,24 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
     x += tierW + 10 * scale;
     ImGui::SetCursorScreenPos(at + ImVec2(x, 0));
     select("##sort", filter.sort, sorts, sortW);
-    if (button("filters", "Filters", at + ImVec2(width - 208 * scale, 0), ImVec2(80, 38) * scale))
-        ImGui::OpenPopup("Card filters");
+    if (button("filters", "筛选", at + ImVec2(width - 208 * scale, 0), ImVec2(80, 38) * scale))
+        ImGui::OpenPopup("卡牌筛选");
     ImGui::SetNextWindowSize(ImVec2(370 * scale, 0));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20, 20) * scale);
-    if (ImGui::BeginPopup("Card filters")) {
-        std::vector<std::string> groups{"All groups"};
-        for (auto name : ttcg::creatureGroups) groups.emplace_back(name);
+    if (ImGui::BeginPopup("卡牌筛选")) {
+        std::vector<std::string> groups{"全部分组"};
+        for (unsigned i = 0; i < ttcg::creatureGroups.size(); ++i) groups.emplace_back(ttcg::zhGroupName(i));
         int group = filter.group + 1;
-        if (combo("##group", "Group", group, groups, 330 * scale)) filter.group = group - 1;
-        combo("##rarity", "Rarity", filter.rarity, {"All rarities", "Common", "Rare", "Epic", "Legendary"},
+        if (combo("##group", "分组", group, groups, 330 * scale)) filter.group = group - 1;
+        combo("##rarity", "稀有度", filter.rarity, {"全部稀有度", "普通", "稀有", "史诗", "传说"},
               330 * scale);
-        combo("##finish", "Finish", filter.finish, {"All finishes", "Standard", "Foil"}, 330 * scale);
+        combo("##finish", "版本", filter.finish, {"全部版本", "普通", "闪卡"}, 330 * scale);
         int affinity = filter.affinity + 1;
-        if (combo("##affinity", "Affinity", affinity,
-                  {"All affinities", "Neutral", "Strength", "Intelligence", "Willpower", "Agility", "Endurance"},
+        if (combo("##affinity", "亲和", affinity,
+                  {"全部亲和", "中立", "力量", "智力", "意志", "敏捷", "耐力"},
                   330 * scale))
             filter.affinity = affinity - 1;
-        std::vector<std::string> sets{"All sets", "Tessera"}, keys{"", "tessera"};
+        std::vector<std::string> sets{"全部系列", "Tessera"}, keys{"", "tessera"};
         for (const auto& c : collection.cards)
             if (!c.setKey.empty() && std::find(keys.begin(), keys.end(), c.setKey) == keys.end()) {
                 keys.push_back(c.setKey);
@@ -61,8 +62,8 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
             }
         int set = int(std::find(keys.begin(), keys.end(), filter.set) - keys.begin());
         if (set >= int(keys.size())) set = 0;
-        if (combo("##set", "Set", set, sets, 330 * scale)) filter.set = keys[set];
-        if (action("Reset filters")) {
+        if (combo("##set", "系列", set, sets, 330 * scale)) filter.set = keys[set];
+        if (action("重置筛选")) {
             filter = Filter{};
             query[0] = 0;
         }
@@ -74,7 +75,7 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
         // Card size, on both the album and the deck editor.
         int& density = editing ? deckDensity : cardDensity;
         const char* ids[]{"view-large", "view-medium", "view-small"};
-        const char* labels[]{"Large cards", "Medium cards", "Small cards"};
+        const char* labels[]{"大卡", "中卡", "小卡"};
         for (int i = 0; i < 3; ++i) {
             const auto pos = at + ImVec2(width - (118 - i * 40.f) * scale, 3 * scale);
             if (button(ids[i], "", pos, ImVec2(34, 32) * scale, density == i)) density = i;
@@ -93,20 +94,20 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
     }
     {
         // Filters set in the popup stay visible as chips; a click clears one.
-        static const char* rarities[]{"", "Common", "Rare", "Epic", "Legendary"};
-        static const char* finishes[]{"", "Standard", "Foil"};
+        static const char* rarities[]{"", "普通", "稀有", "史诗", "传说"};
+        static const char* finishes[]{"", "普通", "闪卡"};
         struct Chip {
             std::string name;
             int kind;
         };
         std::vector<Chip> chips;
         if (filter.group >= 0 && filter.group < int(ttcg::creatureGroups.size()))
-            chips.push_back({std::string(ttcg::creatureGroups[filter.group]), 0});
+            chips.push_back({std::string(ttcg::zhGroupName(filter.group)), 0});
         if (filter.rarity > 0 && filter.rarity < 5) chips.push_back({rarities[filter.rarity], 1});
         if (filter.finish > 0 && filter.finish < 3) chips.push_back({finishes[filter.finish], 2});
-        if (filter.affinity == 0) chips.push_back({"Neutral", 3});
+        if (filter.affinity == 0) chips.push_back({"中立", 3});
         if (filter.affinity > 0 && filter.affinity <= 5)
-            chips.push_back({ttcg::attributeNames[filter.affinity - 1], 3});
+            chips.push_back({std::string(ttcg::zhAffinityName(filter.affinity - 1)), 3});
         if (!filter.set.empty()) {
             std::string name = filter.set == "tessera" ? "Tessera" : filter.set;
             for (const auto& c : collection.cards)
@@ -138,11 +139,11 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
         }
     }
     const auto countLabel = [&] {
-        std::string total = std::to_string(visible.size()) + " cards";
+        std::string total = std::to_string(visible.size()) + " 张卡";
         if (!editing) {
             int known = 0;
             for (const auto& c : collection.cards) known += c.known[0] || c.known[1];
-            total += " · " + std::to_string(known) + " of " + std::to_string(collection.cards.size()) + " discovered";
+            total += " · 已收集 " + std::to_string(known) + " / " + std::to_string(collection.cards.size());
         }
         textRight(at + ImVec2(width - 14 * scale, 54 * scale), total, 15, palette().muted);
     };
@@ -173,7 +174,7 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
         if (!filter.set.empty() && (c.setKey.empty() ? "tessera" : c.setKey) != filter.set) continue;
         if (query[0]) {
             const auto& raw = state["cards"][id];
-            const auto hay = lower(c.name + " " + c.rarity + " " + join(member(raw, "groups")) + " " +
+            const auto hay = lower(ttcg::zhCardName(c.name) + " " + c.name + " " + c.rarity + " " + join(member(raw, "groups")) + " " +
                                    join(member(raw, "subtypes")) + " " + join(member(raw, "affinities")));
             if (hay.find(lower(query)) == std::string::npos) continue;
         }
@@ -193,7 +194,7 @@ void GameApp::nativeFilters(ImVec2 at, float width, bool editing) {
                         std::find(rarity.begin(), rarity.end(), y.rarity));
         }
         if (order) return filter.sort == 1 || filter.sort == 3 ? order > 0 : order < 0;
-        return x.name != y.name ? x.name < y.name : a < b;
+        return ttcg::zhCardName(x.name) != ttcg::zhCardName(y.name) ? ttcg::zhCardName(x.name) < ttcg::zhCardName(y.name) : a < b;
     });
     countLabel();
 }
@@ -207,7 +208,7 @@ void GameApp::nativeAlbum(ImVec2 at, ImVec2 size) {
 }
 void GameApp::nativeDecks(ImVec2 at, ImVec2 size) {
     if (!member(state, "interruptedMatch").is_null()) {
-        text(at, "Finish your current game to edit decks.", 21, palette().muted);
+        text(at, "请先结束当前对局，再编辑牌组。", 21, palette().muted);
         return;
     }
     decks(at, size);
@@ -237,8 +238,8 @@ void GameApp::drawDetail(ImVec2 at, ImVec2 size) {
     const bool inset = skinPiece("detail");
     if (!skinBand("band", ImVec2(at.x, y), ImVec2(size.x, 40 * scale)))
         skinBand("selector", ImVec2(at.x, y), ImVec2(size.x, 40 * scale));
-    const float fit = std::min(19.f, 19.f * (size.x - 24 * scale) / std::max(1.f, capsWidth(c.name, 19, 1)));
-    textCaps(ImVec2(mid, y + (40 - fit * 1.25f) * .5f * scale), c.name, fit, palette().ink, 1, true);
+    const float fit = std::min(19.f, 19.f * (size.x - 24 * scale) / std::max(1.f, capsWidth(ttcg::zhCardName(c.name), 19, 1)));
+    textCaps(ImVec2(mid, y + (40 - fit * 1.25f) * .5f * scale), ttcg::zhCardName(c.name), fit, palette().ink, 1, true);
     y += 44 * scale;
     y += factRows(c, ImVec2(at.x + (inset ? 10 : 2) * scale, y), size.x - (inset ? 20 : 4) * scale) + 16 * scale;
     if (tab == 1) {
@@ -250,7 +251,7 @@ void GameApp::drawDetail(ImVec2 at, ImVec2 size) {
         const int held = slot >= 0 ? collection.index(collection.deck[slot]) : -1;
         if (held >= 0 && collection.deck[slot] != id) {
             const auto& other = collection.cards[held];
-            textCaps(ImVec2(at.x + 2 * scale, y + 5 * scale), "Vs slot " + std::to_string(slot + 1), 12.5f,
+            textCaps(ImVec2(at.x + 2 * scale, y + 5 * scale), "对比槽位 " + std::to_string(slot + 1), 12.5f,
                      palette().muted, 1.2f);
             const char* arrows[]{"↑", "→", "↓", "←"};
             float x = at.x + size.x - 2 * scale;
@@ -270,13 +271,13 @@ void GameApp::drawDetail(ImVec2 at, ImVec2 size) {
             }
         }
         y += 34 * scale;
-        const auto title = slot < 0                ? std::string("Choose a slot")
-                           : collection.deck[slot] ? "Replace slot " + std::to_string(slot + 1)
-                                                   : "Add to slot " + std::to_string(slot + 1);
+        const auto title = slot < 0                ? std::string("选择槽位")
+                           : collection.deck[slot] ? "替换槽位 " + std::to_string(slot + 1)
+                                                   : "加入槽位 " + std::to_string(slot + 1);
         if (button("add", title.c_str(), ImVec2(at.x, y), ImVec2(size.x, 40 * scale), true,
                    slot >= 0 && collection.canUse(id, slot) && !pendingCommand))
             addToDeck(id);
-    } else if (button("deck-card", "Use in deck", ImVec2(at.x, y + 34 * scale), ImVec2(size.x, 40 * scale), false,
+    } else if (button("deck-card", "用于牌组", ImVec2(at.x, y + 34 * scale), ImVec2(size.x, 40 * scale), false,
                       collection.writable && c.owned[selectedFoil] > 0)) {
         tab = 1;
         screen = 3;
