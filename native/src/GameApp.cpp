@@ -578,16 +578,16 @@ void GameApp::closeView() {
     }
     const auto& c = member(state, "collection");
     if (const auto* e = tournament(number(c, "tournamentID")); e && number(*e, "foilUpgrades") > 0) {
-        confirm("Leave unused foil upgrades?", "They will be lost.", "tournament",
-                "leave " + std::to_string(number(*e, "id")), "Leave");
+        confirm("放弃未使用的闪卡升级？", "这些升级将作废。", "tournament", "leave " + std::to_string(number(*e, "id")),
+                "放弃");
         return;
     }
     if (label(state, "phase") == "match") {
-        confirm("Leave this game?",
-                number(c, "tournamentID") ? "This ends your tournament run."
-                : flag(c, "practice")     ? "End this practice game?"
-                                          : "The game counts as a loss. Its trade rule and wager still apply.",
-                "forfeit", {}, "Leave");
+        confirm("要离开这局吗？",
+                number(c, "tournamentID") ? "这会结束你的锦标赛征程。"
+                : flag(c, "practice")     ? "要结束这场练习对局吗？"
+                                          : "这局按失败计算，交易规则与赌注仍然生效。",
+                "forfeit", {}, "离开");
         return;
     }
     if (flag(c, "staked") || flag(c, "paying")) return;
@@ -828,7 +828,7 @@ void GameApp::draw() {
             x += keyPrompt("Esc", "360_B", prompts.back, ImVec2(x, y), &leave) + 26 * scale;
             if (leave) closeView();
             if (prompts.action) x += keyPrompt("Mouse1", "360_A", prompts.action, ImVec2(x, y)) + 26 * scale;
-            if (prompts.inspect) x += keyPrompt("Mouse2", "360_Y", "Inspect", ImVec2(x, y)) + 26 * scale;
+            if (prompts.inspect) x += keyPrompt("Mouse2", "360_Y", "查看", ImVec2(x, y)) + 26 * scale;
             if (prompts.extra)
                 x += keyPrompt(prompts.extraKey, prompts.extraPad, prompts.extra, ImVec2(x, y)) + 26 * scale;
         }
@@ -849,4 +849,3 @@ void GameApp::draw() {
 }
 
 }
-//（注：内容由AI生成）
