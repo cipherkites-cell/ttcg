@@ -446,8 +446,8 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
         devToggle("邀请赛", "InvitationalTournaments", "InvitationalTournaments");
         devToggle("大师赛", "MastersTournaments", "MastersTournaments");
         std::vector<std::string> holds;
-        for (const auto& h : arrayMember(member(state, "collection"), "regions")
-             holds.push_back(ttcg::zhHoldText(label(h, "name")));
+        for (const auto& h : arrayMember(member(state, "collection"), "regions"))
+            holds.push_back(ttcg::zhHoldText(label(h, "name")));
         int hold = std::clamp(number(dev, "TournamentHold", 1) - 1, 0, 9);
         if (!holds.empty() && combo("dev-hold", "信使领地", hold, holds, width))
             send("development", "set TournamentHold " + std::to_string(hold + 1));
@@ -464,12 +464,13 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
             send("development", "set Rules " + std::to_string(inherit ? -1 : 0));
         if (!inherit)
             for (auto [bit, name] : ruleNames) {
-            bool value = (rules & bit) != 0;
-            const auto shown = zhRuleName(name);
-            if (ImGui::Checkbox((shown + "##" + name).c_str(), &value)) {
-                const auto proposed = value ? ttcg::withSpreadRule(rules, bit) : ttcg::withoutCultureRule(rules, bit);
-                send("development", "set Rules " + std::to_string(proposed));
-            }
+                bool value = (rules & bit) != 0;
+                const auto shown = zhRuleName(name);
+                if (ImGui::Checkbox((shown + "##" + name).c_str(), &value)) {
+                    const auto proposed =
+                        value ? ttcg::withSpreadRule(rules, bit) : ttcg::withoutCultureRule(rules, bit);
+                    send("development", "set Rules " + std::to_string(proposed));
+                }
             }
         int trade = number(dev, "TradeRule", -1) + 1;
         if (combo("dev-trade", "交易规则", trade, {"默认", "无", "一张", "分差", "直接", "全部"}, width))
@@ -527,4 +528,3 @@ void GameApp::settings(ImVec2 at, ImVec2 size) {
     }
 }
 }
-//（注：内容由AI生成）
