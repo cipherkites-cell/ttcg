@@ -177,7 +177,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
         for (const auto& deck : collection.decks) {
             if (deck.id == collection.activeDeck) chosen = int(names.size());
             const auto count = std::count_if(deck.cards.begin(), deck.cards.end(), [](auto id) { return id != 0; });
-            names.push_back(deck.name + (count < 5 ? "  (" + std::to_string(count) + "/5)" : ""));
+            names.push_back(ttcg::zhDeckText(deck.name) + (count < 5 ? "  (" + std::to_string(count) + "/5)" : ""));
         }
         if (names.empty()) names.push_back("你的牌组");
         ImGui::SetCursorScreenPos(at);
@@ -213,10 +213,10 @@ void App::decks(ImVec2 at, ImVec2 size) {
                        false, enabled)) {
                 deckDialog = item.first;
                 std::snprintf(deckName, sizeof(deckName), "%s",
-                              active == collection.decks.end() ? "Deck" : active->name.c_str());
+                              active == collection.decks.end() ? "牌组" : active->name.c_str());
                 if (deckDialog == "copy")
-                    std::snprintf(deckName, sizeof(deckName), "Copy of %s",
-                                  active == collection.decks.end() ? "Deck" : active->name.c_str());
+                    std::snprintf(deckName, sizeof(deckName), "复制 %s",
+                                  active == collection.decks.end() ? "牌组" : active->name.c_str());
             }
             ++n;
         }
@@ -254,8 +254,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
                         deckSlot = -1;
                         request({{"action", "deck"}, {"cards", hand}});
                     } else
-                        collection.notice =
-                            "That card cannot fill this slot. Check your owned copies and the deck limit.";
+                        collection.notice = "这张卡放不进这个槽位。请检查自有张数和牌组上限。";
                 }
             if (const auto* payload = ImGui::AcceptDragDropPayload("TESSERA_SLOT"))
                 if (payload->DataSize == sizeof(int) && editable) {
@@ -281,15 +280,15 @@ void App::decks(ImVec2 at, ImVec2 size) {
         const float ch = extent.y - 10 * scale, cw = ch * .75f;
         const ImVec2 art = pos + ImVec2(12 * scale, 5 * scale);
         const float textX = art.x + cw + 14 * scale, cross = 70 * scale, textW = pos.x + side - cross - textX;
-        const std::string place = "Slot " + std::to_string(slot + 1);
+        const std::string place = "槽位 " + std::to_string(slot + 1);
         if (index >= 0) {
             const auto& c = collection.cards[index];
             card(index, art, ImVec2(cw, ch), false, foil && face.foil, -1, 1 + slot);
             d->PushClipRect(ImVec2(textX, pos.y), ImVec2(textX + textW, pos.y + extent.y), true);
             const float block = 68 * scale, ty = pos.y + (extent.y - block) * .5f;
-            text(ImVec2(textX, ty), fitted(c.name, 18, textW), 18, palette().ink);
+            text(ImVec2(textX, ty), fitted(ttcg::zhCardName(c.name), 18, textW), 18, palette().ink);
             text(ImVec2(textX, ty + 27 * scale),
-                 fitted(place + " · Tier " + tierNumeral(c.tier) + (foil ? " · Foil" : ""), 14, textW), 15,
+                 fitted(place + " · 阶级 " + tierNumeral(c.tier) + (foil ? " · 闪卡" : ""), 14, textW), 15,
                  palette().muted);
             float ix = textX;
             for (int a = 0; a < 5; ++a)
@@ -335,10 +334,10 @@ void App::decks(ImVec2 at, ImVec2 size) {
             }
         };
         move("slot-left", "↑", 194, deckSlot - 1);
-        itemTooltip("Move up");
+        itemTooltip("上移");
         move("slot-right", "↓", 150, deckSlot + 1);
-        itemTooltip("Move down");
-        if (button("slot-remove", "Remove", ImVec2(at.x + side - 104 * scale, y), ImVec2(104, 32) * scale, false,
+        itemTooltip("下移");
+        if (button("slot-remove", "移出", ImVec2(at.x + side - 104 * scale, y), ImVec2(104, 32) * scale, false,
                    editable && collection.deck[deckSlot] != 0)) {
             auto hand = collection.deck;
             hand[deckSlot] = 0;
@@ -346,8 +345,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
         }
     } else
         text(ImVec2(at.x, y + 6 * scale),
-             next >= 0 ? "Choose a card to fill slot " + std::to_string(next + 1) : "Choose a slot to change it", 15,
-             palette().muted);
+             next >= 0 ? "选择一张卡填入槽位 " + std::to_string(next + 1) : "选择一个槽位来更换", 15, palette().muted);
     // What the deck adds up to.
     std::array<int, ttcg::creatureGroups.size()> groups{};
     std::array<int, 5> affinities{};
@@ -366,7 +364,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
     }
     const ImVec2 summary(at.x, y + strip + 4 * scale);
     skinRule(summary, summary + ImVec2(side, 0), .5f);
-    textCaps(summary + ImVec2(0, 14 * scale), "Average ranks", 12.5f, palette().muted, 1.2f);
+    textCaps(summary + ImVec2(0, 14 * scale), "平均点数", 12.5f, palette().muted, 1.2f);
     {
         const ImVec2 centre = summary + ImVec2(52 * scale, 88 * scale);
         const float reach = 30 * scale;
@@ -398,7 +396,7 @@ void App::decks(ImVec2 at, ImVec2 size) {
     std::string groupSummary;
     for (unsigned g = 0; g < groups.size(); ++g)
         if (groups[g])
-            groupSummary += (groupSummary.empty() ? "" : " · ") + std::string(ttcg::creatureGroups[g]) + " " +
+            groupSummary += (groupSummary.empty() ? "" : " · ") + std::string(ttcg::zhGroupName(g)) + " " +
                             std::to_string(groups[g]);
     d->PushClipRect(ImVec2(factsX, summary.y), ImVec2(factsX + factsW, at.y + size.y), true);
     text(ImVec2(factsX, summary.y + (ax > factsX ? 70 : 40) * scale), groupSummary, 15, palette().muted, factsW);
@@ -465,3 +463,4 @@ void App::deckModal() {
     ImGui::PopStyleVar();
 }
 }
+//（注：内容由AI生成）

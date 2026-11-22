@@ -33,7 +33,7 @@ float App::packStrip(ImVec2 at, float width) {
     return height + 14 * scale;
 }
 void App::packModal() {
-    if (collection.revealID && !ImGui::IsPopupOpen("卡包内容")) ImGui::OpenPopup("Pack contents");
+    if (collection.revealID && !ImGui::IsPopupOpen("卡包内容")) ImGui::OpenPopup("卡包内容");
     const auto display = ImGui::GetIO().DisplaySize;
     const int count = int(collection.revealed.size()), columns = count > 5 ? 4 : std::max(1, count),
               rows = (count + columns - 1) / columns;
@@ -120,8 +120,8 @@ void App::packModal() {
             draw->AddRectFilled(p, p + ImVec2(w, h),
                                 (tone(c.rarity) & 0xffffff) | (ImU32(255 * .5f * flare * flare) << 24));
         if (shown)
-            text(p + ImVec2(w * .5f, h + 17 * scale), c.rarity + (foil ? " · Foil" : ""), 18,
-                 rank > 0 ? rarityInk(c.rarity) : palette().muted, 0, true);
+            text(p + ImVec2(w * .5f, h + 17 * scale), std::string(ttcg::zhRarity(c.rarity)) + (foil ? " · 闪卡" : ""),
+                 18, rank > 0 ? rarityInk(c.rarity) : palette().muted, 0, true);
         fadeVertices(start, fade);
         ImGui::PopID();
     }
@@ -140,3 +140,4 @@ void App::packModal() {
     ImGui::EndPopup();
 }
 }
+//（注：内容由AI生成）

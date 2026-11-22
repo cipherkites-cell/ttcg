@@ -18,8 +18,8 @@ bool GameApp::ruleRequestModal() {
                            : "我们可以用“" + rulesLabel(request, false) + "”来一局吗？";
     if (offer) {
         if (const auto replaced = number(culture, "replaces"))
-            copy += " It replaces " + rulesLabel(replaced, false) + " for this game.";
-        copy += " If it catches on, local players may adopt it.";
+            copy += " 本局它替代了“" + rulesLabel(replaced, false) + "”。";
+        copy += " 若就此流行开来，本地玩家可能会采用。";
     }
     const float width = 560 * scale, content = width - 64 * scale;
     const auto wrap = [&](const std::string& value, float pixels) {
@@ -40,7 +40,7 @@ bool GameApp::ruleRequestModal() {
     const float noticeHeight = notice.empty() ? 0 : (18 + notice.size() * 21) * scale;
     const ImVec2 extent(width, (36 + speaker.size() * 32 + 18 + message.size() * 29 + 28 + 42 + 36 + 38) * scale +
                                    noticeHeight);
-    if (!ImGui::IsPopupOpen("规则邀约")) ImGui::OpenPopup("Rule request");
+    if (!ImGui::IsPopupOpen("规则邀约")) ImGui::OpenPopup("规则邀约");
     ImGui::SetNextWindowPos(frameAt + frameSize * .5f, ImGuiCond_Always, ImVec2(.5f, .5f));
     ImGui::SetNextWindowSize(extent);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(32, 36) * scale);
@@ -86,8 +86,8 @@ bool GameApp::ruleRequestModal() {
         // Back leaves without an answer: declining is an answer, and ends the offer.
         bool leave = false;
         const float promptWidth = keyPrompt("Esc", "360_B", "不作答并离开", ImVec2(-1e5f, -1e5f));
-        keyPrompt("Esc", "360_B", "Leave without answering",
-                  ImVec2(at.x + (width - promptWidth) / 2, buttons.y + 56 * scale), &leave, "leave-rule");
+        keyPrompt("Esc", "360_B", "不作答并离开", ImVec2(at.x + (width - promptWidth) / 2, buttons.y + 56 * scale),
+                  &leave, "leave-rule");
         if ((back || leave) && ready) {
             send("close");
             ruleAnswerPending = true;
@@ -104,12 +104,13 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
     const bool tournamentGame = number(c, "tournamentID") != 0, casual = flag(c, "practice");
     // Who you are facing, and how you have fared against them.
     text(at, label(state, "opponent"), 32, palette().ink);
-    auto subtitle = label(c, "hold") + " · " + (tournamentGame ? "Tournament" : label(c, "skill"));
+    auto subtitle =
+        ttcg::zhHoldText(label(c, "hold")) + " · " + (tournamentGame ? "锦标赛" : ttcg::zhSkillText(label(c, "skill")));
     for (const auto& rival : arrayMember(c, "roster"))
         if (label(rival, "name") == label(state, "opponent") &&
             number(rival, "wins") + number(rival, "losses") + number(rival, "draws") > 0)
-            subtitle += " · " + std::to_string(number(rival, "wins")) + " W · " +
-                        std::to_string(number(rival, "losses")) + " L · " + std::to_string(number(rival, "draws")) +
+            subtitle += " · " + std::to_string(number(rival, "wins")) + " 胜 · " +
+                        std::to_string(number(rival, "losses")) + " 负 · " + std::to_string(number(rival, "draws")) +
                         " D";
     text(at + ImVec2(0, 46) * scale, subtitle, 18, palette().muted, size.x);
     const float top = at.y + 92 * scale, footerY = at.y + size.y - 73 * scale;
@@ -192,7 +193,7 @@ void GameApp::lobby(ImVec2 at, ImVec2 size) {
                 if (value <= affordable) {
                     if (wager == value) chosen = int(values.size());
                     values.push_back(value);
-                    amounts.push_back(std::to_string(value) + " gold");
+                    amounts.push_back(std::to_string(value) + " 金币");
                 }
             ImGui::SetCursorScreenPos(ImVec2(terms.x + panel - 150 * scale, ay));
             ImGui::BeginDisabled(!flag(c, "canStake"));
@@ -457,7 +458,7 @@ std::pair<ImVec2, ImVec2> GameApp::table(const Json& data, ImVec2 at, ImVec2 siz
         const float firstGlow = !demo && animating && flag(state, "opening") && number(state, "turn") == player
                                     ? std::sin(std::numbers::pi_v<float> * std::clamp(firstProgress, 0.f, 1.f))
                                     : 0;
-        const auto name = player ? (demo ? "Opponent" : label(state, "opponent", "Opponent")) : "You";
+        const auto name = player ? (demo ? "对手" : label(state, "opponent", "对手")) : "你";
         // A long name shrinks as far as the smallest text allowed, then is shortened.
         const float nameRoom = handArea - 86 * scale;
         const float nameSize =
@@ -810,7 +811,7 @@ void GameApp::matchPanel(ImVec2 at, ImVec2 size) {
     if (flag(state, "opening")) {
         const double swap = itemNumber(member(state, "swapped"), 0) >= 0 && number(state, "redeals") == 0 ? 2.2 : 0;
         if (elapsed < swap) {
-            callout = "Swap";
+            callout = "交换";
             duration = swap;
         } else if (elapsed < swap + 1.15) {
             drawStarter(ImGui::GetWindowDrawList(), boardAt, boardSize, scale, float((elapsed - swap) / 1.15),
@@ -827,10 +828,10 @@ void GameApp::matchPanel(ImVec2 at, ImVec2 size) {
             const auto& s = state["stages"][i];
             if (elapsed >= presentation.stageStarts[i] && elapsed < presentation.stageStarts[i] + .76 &&
                 !label(s, "label").empty()) {
-                callout = label(s, "label");
+                callout = ttcg::zhRuleLabelText(label(s, "label"));
                 start = presentation.stageStarts[i];
-                tone = callout == "Combo" ? "combo"
-                       : callout.find("Legion") != std::string::npos || callout.find("Decimation") != std::string::npos
+                tone = callout == "连锁" ? "combo"
+                       : callout.find("军团") != std::string::npos || callout.find("减损") != std::string::npos
                            ? "group"
                            : "rule";
             }
@@ -838,13 +839,13 @@ void GameApp::matchPanel(ImVec2 at, ImVec2 size) {
         const double stagesEnd = presentation.duration - (flag(state, "suddenDeath") ? 1.6 : 0) -
                                  (label(state, "phase") == "result" ? 1.8 : 0);
         if (flag(state, "suddenDeath") && elapsed >= stagesEnd) {
-            callout = "Sudden Death";
+            callout = "骤死";
             start = stagesEnd;
             duration = 1.6;
         }
         if (label(state, "phase") == "result" && elapsed >= presentation.duration - 1.8) {
             const int yours = itemNumber(member(state, "score"), 0), theirs = itemNumber(member(state, "score"), 1);
-            callout = yours == theirs ? "Draw" : yours > theirs ? "You Win!" : "You Lose";
+            callout = yours == theirs ? "平局" : yours > theirs ? "你赢了！" : "你输了";
             tone = yours == theirs ? "draw" : yours > theirs ? "win" : "lose";
             start = presentation.duration - 1.8;
             duration = 1.8;
@@ -895,3 +896,4 @@ void GameApp::tickPresentation() {
     }
 }
 }
+//（注：内容由AI生成）

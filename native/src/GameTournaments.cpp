@@ -64,12 +64,12 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     text(origin, label(e, "name") + " · " + label(e, "circuitName"), 32, palette().accent, width - 170 * scale);
     const auto champion = number(e, "champion");
     text(origin + ImVec2(width - 170 * scale, 14 * scale),
-         champion                ? (champion == 20          ? "Champion"
-                                    : flag(e, "eliminated") ? "Eliminated"
-                                                            : "Complete")
-         : flag(e, "eliminated") ? "Withdrawn"
-         : flag(e, "joined")     ? "In progress"
-                                 : "Open for entry",
+         champion                ? (champion == 20          ? "冠军"
+                                    : flag(e, "eliminated") ? "被淘汰"
+                                                            : "已结束")
+         : flag(e, "eliminated") ? "已退赛"
+         : flag(e, "joined")     ? "进行中"
+                                 : "报名中",
          18, palette().accent, 170 * scale);
     text(origin + ImVec2(0, 44) * scale, label(e, "venue") + " · " + label(e, "host"), 18, palette().muted);
     line(origin + ImVec2(0, 82) * scale, origin + ImVec2(width, 82 * scale));
@@ -79,7 +79,7 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     const float prizes = 205 * scale, boardW = width - prizes - gap, top = 185 * scale,
                 availableH = size.y - top - 90 * scale, colGap = 15 * scale, colW = (boardW - 2 * colGap) / 3;
     for (int col = 0; col < 3; ++col) {
-        const char* title = col == 0 ? "Quarterfinals" : col == 1 ? "Semifinals" : "Final";
+        const char* title = col == 0 ? "四分之一决赛" : col == 1 ? "半决赛" : "决赛";
         text(origin + ImVec2(col * (colW + colGap), top - 20 * scale), title, 18, palette().muted);
         const int start = col == 0 ? 8 : col == 1 ? 12 : 14, count = col == 0 ? 4 : col == 1 ? 2 : 1;
         const float section = availableH / count, pairH = std::min(86 * scale, section - 12 * scale);
@@ -155,20 +155,20 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
     int playable = 0;
     for (const auto& card : collection.cards) playable += std::min(card.unique ? 1 : 2, card.owned[0] + card.owned[1]);
     if (!flag(member(state, "settings"), "gamesEnabled", true))
-        reason = "Turn on Tessera games in Settings to play.";
+        reason = "在设置里开启 Tessera 对局后才能游玩。";
     else if (hasInterrupted)
-        reason = same ? flag(interrupted, "canResume") ? "" : "Return to " + label(e, "venue") + " to resume."
-                      : "Finish your interrupted game first.";
+        reason = same ? flag(interrupted, "canResume") ? "" : "回到" + label(e, "venue") + "继续对局。"
+                      : "请先打完被打断的对局。";
     else if (registration && flag(data, "activeEntry"))
-        reason = "Finish your current tournament first.";
+        reason = "请先完成当前的锦标赛。";
     else if (registration && !flag(e, "canEnter"))
-        reason = "Speak to " + label(e, "host") + " at " + label(e, "venue") + " to enter.";
+        reason = "去" + label(e, "venue") + "找" + label(e, "host") + "报名。";
     else if (!flag(e, "atVenue"))
-        reason = "Return to " + label(e, "venue") + " to play.";
+        reason = "回到" + label(e, "venue") + "才能参赛。";
     else if (registration && number(c, "gold") < number(e, "fee"))
-        reason = "Not enough gold for entry.";
+        reason = "金币不足以报名。";
     else if (registration && playable < 5)
-        reason = "You need five playable cards to enter.";
+        reason = "需要五张可用卡牌才能报名。";
     text(footer + ImVec2(0, play && !hasInterrupted ? -28 : 23) * scale, reason, 15, palette().muted,
          width - 250 * scale);
     if (play && !hasInterrupted) {
@@ -177,24 +177,23 @@ void GameApp::tournaments(ImVec2 at, ImVec2 size) {
             screen = 3;
         }
         if (button("withdraw", "退赛", footer + ImVec2(120, 20) * scale, ImVec2(110, 36) * scale))
-            confirm("要退出锦标赛吗？",
-                    number(e, "fee") ? "Your entry fee will not be refunded." : "This ends your tournament run.",
-                    "tournament", "withdraw " + std::to_string(eventID), "Withdraw");
+            confirm("要退出锦标赛吗？", number(e, "fee") ? "报名费不会退还。" : "本次锦标赛之旅将就此结束。",
+                    "tournament", "withdraw " + std::to_string(eventID), "退赛");
     }
     if (registration || play || same) {
-        const auto action = same           ? flag(interrupted, "finished") ? "Collect rewards" : "Resume game"
-                            : registration ? "Enter tournament"
-                            : number(e, "round") == 1 ? "Play quarterfinal"
-                            : number(e, "round") == 2 ? "Play semifinal"
-                                                      : "Play final";
+        const auto action = same                      ? flag(interrupted, "finished") ? "领取奖励" : "继续对局"
+                            : registration            ? "报名参赛"
+                            : number(e, "round") == 1 ? "进行四分之一决赛"
+                            : number(e, "round") == 2 ? "进行半决赛"
+                                                      : "进行决赛";
         if (button("tournament-action", action, footer + ImVec2(width - 215 * scale, 17 * scale),
                    ImVec2(215, 40) * scale, true, reason.empty() && !pendingCommand)) {
             if (same)
                 send("interrupted", "resume");
             else if (registration)
-                confirm(number(e, "fee") ? "Enter for " + std::to_string(number(e, "fee")) + " gold?"
-                                         : "Enter tournament?",
-                        "", "tournament", "enter " + std::to_string(eventID), "Enter");
+                confirm(number(e, "fee") ? "以 " + std::to_string(number(e, "fee")) + " 金币报名？"
+                                         : "报名参加锦标赛？",
+                        "", "tournament", "enter " + std::to_string(eventID), "报名");
             else
                 send("tournament", "round " + std::to_string(eventID));
         }
@@ -226,16 +225,16 @@ void GameApp::tournamentOutcome() {
         popupSurface();
         const bool champion = number(e, "champion") == 20, over = number(e, "champion") || flag(e, "eliminated");
         const int announce = number(e, "announcement"), upgrades = number(e, "foilUpgrades");
-        const auto outcome = itemNumber(member(state, "score"), 0) == itemNumber(member(state, "score"), 1) ? "Draw"
-                             : itemNumber(member(state, "score"), 0) > 5 ? "Game won"
-                                                                         : "Game lost";
-        const auto title = champion                ? "Tournament won"
-                           : announce == 1         ? "Through to the semifinals"
-                           : announce == 2         ? "Through to the final"
-                           : flag(e, "eliminated") ? "Tournament over"
+        const auto outcome = itemNumber(member(state, "score"), 0) == itemNumber(member(state, "score"), 1) ? "平局"
+                             : itemNumber(member(state, "score"), 0) > 5 ? "对局获胜"
+                                                                         : "对局失利";
+        const auto title = champion                ? "锦标赛夺冠"
+                           : announce == 1         ? "晋级半决赛"
+                           : announce == 2         ? "晋级决赛"
+                           : flag(e, "eliminated") ? "锦标赛结束"
                                                    : outcome;
         // A centred heading in the outcome's own colour, between two rules.
-        const bool lost = flag(e, "eliminated") || std::string_view(title) == "Game lost";
+        const bool lost = flag(e, "eliminated") || std::string_view(title) == "对局失利";
         const ImU32 tone = champion ? goldInk() : lost ? skin().notice : skin().value;
         const float middle = ImGui::GetWindowPos().x + width * .5f;
         const auto centred = [&](const std::string& value, float pixels, ImU32 colour, float gap) {
@@ -256,15 +255,15 @@ void GameApp::tournamentOutcome() {
         const int node = number(e, "lastNode", 8);
         if (node >= 8 && node <= 14) {
             const auto& wins = member(e, "wins")[node - 8];
-            centred(std::string(node < 12   ? "Quarterfinals"
-                                : node < 14 ? "Semifinals"
-                                            : "Final") +
+            centred(std::string(node < 12   ? "四分之一决赛"
+                                : node < 14 ? "半决赛"
+                                            : "决赛") +
                         " · " + std::to_string(itemNumber(wins, 0, 0)) + "–" + std::to_string(itemNumber(wins, 1, 0)),
                     21, palette().muted, 4);
         }
         ImGui::Dummy(ImVec2(0, 16 * scale));
         if (champion) {
-            centred(std::to_string(number(e, "purse")) + " gold", 26, skin().value, 6);
+            centred(std::to_string(number(e, "purse")) + " 金币", 26, skin().value, 6);
             if (!upgrades) centred(label(e, "prize"), 21, palette().ink, 4);
             const auto p = ImGui::GetCursorScreenPos() + ImVec2(0, 15 * scale);
             int slot = 0;
@@ -358,7 +357,7 @@ void GameApp::tournamentOutcome() {
         const auto leave = [&](std::string action) {
             if (upgrades)
                 confirm("还剩 " + std::to_string(upgrades) + " 次闪卡升级未使用，确定离开？", "这些机会将作废。",
-                        "tournament", action + " " + std::to_string(eventID), "Leave");
+                        "tournament", action + " " + std::to_string(eventID), "离开");
             else
                 send("tournament", action + " " + std::to_string(eventID));
         };
@@ -370,11 +369,11 @@ void GameApp::tournamentOutcome() {
             leave("ack");
             ImGui::CloseCurrentPopup();
         }
-        const auto next = over                                  ? champion ? "View tournament" : "View results"
-                          : announce == 1                       ? "Continue to semifinals"
-                          : announce == 2                       ? "Continue to final"
-                          : std::string_view(outcome) == "Draw" ? "Replay game"
-                                                                : "Next game";
+        const auto next = over                                  ? champion ? "查看锦标赛" : "查看结果"
+                          : announce == 1                       ? "进入半决赛"
+                          : announce == 2                       ? "进入决赛"
+                          : std::string_view(outcome) == "平局" ? "重新对局"
+                                                                : "下一局";
         if (button("next-game", next, bottom + ImVec2(width - 330 * scale, 0), ImVec2(270, 40) * scale, true,
                    !pendingCommand)) {
             if (over)
@@ -436,10 +435,10 @@ void GameApp::resultModal() {
         advance(TradeView::Done);
     const bool done = trade.phase == TradeView::Done;
     const bool can = flag(c, "canPlay");
-    const std::string reason = done ? (can ? label(c, "notice")
-                                           : label(c, "playUnavailableReason",
-                                                   label(state, "opponent") + " doesn't have enough cards for a game."))
-                                    : std::string{};
+    const std::string reason =
+        done ? (can ? label(c, "notice")
+                    : label(c, "playUnavailableReason", label(state, "opponent") + " 没有足够的卡牌对局。"))
+             : std::string{};
     const auto* event = tournament(number(member(c, "tournaments"), "notification"));
     const float reasonHeight =
         reason.empty() ? 0 : font()->CalcTextSizeA(18 * scale, 1e5f, 490 * scale, reason.c_str()).y + 24 * scale;
@@ -451,14 +450,14 @@ void GameApp::resultModal() {
     }
     const int wager = number(c, "wager");
     std::string settlement;
-    const auto cards = [](int n) { return std::to_string(n) + (n == 1 ? " card" : " cards"); };
-    if (won) settlement = "You won " + cards(won);
-    if (lost) settlement = settlement.empty() ? "You lost " + cards(lost) : settlement + " and lost " + cards(lost);
+    const auto cards = [](int n) { return std::to_string(n) + " 张卡"; };
+    if (won) settlement = "你赢得 " + cards(won);
+    if (lost) settlement = settlement.empty() ? "你失去 " + cards(lost) : settlement + "，失去 " + cards(lost);
     if (wager && outcome >= 0)
-        settlement += (settlement.empty() ? std::string(outcome == 0 ? "You won " : "You lost ")
-                                          : std::string(outcome == 0 ? " and won " : " and lost ")) +
-                      std::to_string(wager) + " gold";
-    if (!settlement.empty()) settlement += ".";
+        settlement += (settlement.empty() ? std::string(outcome == 0 ? "你赢得 " : "你失去 ")
+                                          : std::string(outcome == 0 ? "，并赢得 " : "，并失去 ")) +
+                      std::to_string(wager) + " 金币";
+    if (!settlement.empty()) settlement += "。";
     // The cards that changed hands are shown, not just counted.
     std::vector<int> wonCards, lostCards;
     for (int origin = 0; origin < 10; ++origin) {
@@ -488,7 +487,7 @@ void GameApp::resultModal() {
         if (done) {
             float y = origin.y + 4 * scale;
             const float middle = panel.x + extent.x / 2;
-            const char* heading = outcome < 0 ? "Draw" : outcome == 0 ? "Victory" : "Defeat";
+            const char* heading = outcome < 0 ? "平局" : outcome == 0 ? "胜利" : "失败";
             const ImU32 tone = outcome == 0 ? goldInk() : outcome < 0 ? palette().ink : skin().notice;
             {
                 const float half = capsWidth(heading, 32, 5) * .5f + 26 * scale,
@@ -526,8 +525,8 @@ void GameApp::resultModal() {
                 }
                 rowY += prizeH + 46 * scale;
             };
-            prizes(wonCards, "Won", 0);
-            prizes(lostCards, "Lost", 1);
+            prizes(wonCards, "获得", 0);
+            prizes(lostCards, "失去", 1);
             y += summaryHeight;
             if (!reason.empty()) {
                 text(ImVec2(panel.x + extent.x / 2, y), reason, 18, palette().muted, width, true);
@@ -555,13 +554,13 @@ void GameApp::resultModal() {
                 ImGui::CloseCurrentPopup();
             }
         } else {
-            std::string title = choice         ? required == 1 ? "Choose a card"
-                                                               : "Choose " + std::to_string(required) + " cards · " +
+            std::string title = choice         ? required == 1 ? "选择一张卡"
+                                                               : "选择 " + std::to_string(required) + " 张卡 · " +
                                                                      std::to_string(std::popcount(claimMask)) + "/" +
                                                                      std::to_string(required)
-                                : outcome < 0  ? "Draw"
-                                : outcome == 0 ? "You Win!"
-                                               : label(state, "opponent") + "’s choice";
+                                : outcome < 0  ? "平局"
+                                : outcome == 0 ? "你赢了！"
+                                               : label(state, "opponent") + "的选择";
             text(origin + ImVec2(width / 2, 0), title, 26, palette().ink, width, true);
             const float gap = 16 * scale, w = 160 * scale, h = w / .75f;
             std::array<ImVec2, 10> positions{};
@@ -605,8 +604,8 @@ void GameApp::resultModal() {
             const int wager = number(c, "wager");
             if (wager)
                 text(footer + ImVec2(0, 5 * scale),
-                     (outcome < 0 ? std::to_string(wager) + " gold returned"
-                                  : std::string(outcome == 0 ? "+" : "−") + std::to_string(wager) + " gold"),
+                     (outcome < 0 ? std::to_string(wager) + " 金币已退回"
+                                  : std::string(outcome == 0 ? "+" : "−") + std::to_string(wager) + " 金币"),
                      26, outcome == 1 ? lossInk() : palette().accent);
             if (!label(c, "notice").empty())
                 text(footer + ImVec2(250 * scale, 8 * scale), label(c, "notice"), 15, palette().muted,
@@ -614,8 +613,8 @@ void GameApp::resultModal() {
             else {
                 // The dialog covers the window's own prompts, so it shows the ones that apply here.
                 float x = footer.x + 250 * scale;
-                x += keyPrompt("Mouse1", "360_A", "Select", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
-                x += keyPrompt("Mouse2", "360_Y", "Inspect", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
+                x += keyPrompt("Mouse1", "360_A", "选择", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
+                x += keyPrompt("Mouse2", "360_Y", "查看", ImVec2(x, footer.y + 5 * scale)) + 26 * scale;
                 if (choice) text(ImVec2(x, footer.y + 11 * scale), "选择要带走的战利品。", 15, palette().muted);
             }
             if (button("trade-inspect", "查看", footer + ImVec2(width - 302 * scale, 0), ImVec2(126, 40) * scale)) {
@@ -657,3 +656,4 @@ void GameApp::resultModal() {
     ImGui::PopStyleVar();
 }
 }
+//（注：内容由AI生成）

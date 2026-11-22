@@ -18,7 +18,7 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
     }
     for (const auto& hold : regions) {
         int id = number(hold, "id");
-        if (chapter("hold" + std::to_string(id), label(hold, "name"), ImGui::GetCursorScreenPos(),
+        if (chapter("hold" + std::to_string(id), ttcg::zhHoldText(label(hold, "name")), ImGui::GetCursorScreenPos(),
                     ImVec2(navWidth, 43 * scale), journalHold == id)) {
             journalHold = id;
             journalPlayer = -1;
@@ -32,12 +32,17 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
     const Json* chosen = nullptr;
     for (const auto& h : regions)
         if (number(h, "id") == journalHold) chosen = &h;
-    text(mid, chosen ? label(*chosen, "name") : journalHold == 11 ? "Travellers" : "All holds", 32, palette().accent);
+    text(mid,
+         chosen              ? ttcg::zhHoldText(label(*chosen, "name"))
+         : journalHold == 11 ? "旅行者"
+                             : "全部领地",
+         32, palette().accent);
     float y = mid.y + 53 * scale;
     if (chosen && !flag(*chosen, "travellers") && !flag(*chosen, "unaffiliated")) {
         text(ImVec2(mid.x, y),
-             label(*chosen, "reputationTitle") + " · Wins: " + std::to_string(number(*chosen, "wins")), 21,
-             palette().muted);
+             ttcg::zhReputationText(label(*chosen, "reputationTitle")) + " · 胜场：" +
+                 std::to_string(number(*chosen, "wins")),
+             21, palette().muted);
         y += 38 * scale;
         const auto& changes = arrayMember(*chosen, "ruleChanges");
         y += ruleChips(ImVec2(mid.x, y), width, number(*chosen, "rules"), number(*chosen, "trade"), false, true,
@@ -72,8 +77,8 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
         journalPlayer = rows.empty() ? -1 : rows.front();
     const float detailWidth = journalPlayer >= 0 ? 260 * scale : 0,
                 listWidth = width - (detailWidth ? detailWidth + gap : 0);
-    textRight(ImVec2(mid.x + width - 12 * scale, y - 7 * scale),
-              std::to_string(rows.size()) + (rows.size() == 1 ? " player" : " players"), 15, palette().muted);
+    textRight(ImVec2(mid.x + width - 12 * scale, y - 7 * scale), std::to_string(rows.size()) + " 名玩家", 15,
+              palette().muted);
     y += 24 * scale;
     ImGui::SetCursorScreenPos(ImVec2(mid.x, y));
     ImGui::BeginChild("players", ImVec2(listWidth, at.y + size.y - y), ImGuiChildFlags_NavFlattened);
@@ -88,7 +93,7 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
             const auto pos = ImGui::GetCursorScreenPos();
             const bool friendly = flag(p, "friendlyOnly");
             if (chapter("player" + std::to_string(i), label(p, "name"), pos, ImVec2(rowWidth, rowHeight),
-                        journalPlayer == i, label(p, "skill"), 180 * scale))
+                        journalPlayer == i, ttcg::zhSkillText(label(p, "skill")), 180 * scale))
                 journalPlayer = i;
             std::string record = friendly               ? "练习"
                                  : !flag(p, "unlocked") ? "未解锁"
@@ -124,8 +129,8 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
         const bool friendly = flag(p, "friendlyOnly");
         std::vector<std::pair<const char*, std::string>> facts{
             {"出现地点", label(p, "location")},
-            {"领地", flag(p, "traveller") ? "旅行者" : label(p, "hold")},
-            {"水平", label(p, "skill")},
+            {"领地", flag(p, "traveller") ? "旅行者" : ttcg::zhHoldText(label(p, "hold"))},
+            {"水平", ttcg::zhSkillText(label(p, "skill"))},
             {"对局", friendly              ? "仅练习"
                      : flag(p, "unlocked") ? "可对战"
                                            : "尚未就绪"}};
@@ -138,7 +143,7 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
                                                                                         : rules});
             facts.push_back({"交易", zhTradeName(number(p, "trade"))});
             if (number(p, "wager") > 0)
-                facts.push_back({"Wager", "Up to " + std::to_string(number(p, "wager")) + " gold"});
+                facts.push_back({"赌注", "最高 " + std::to_string(number(p, "wager")) + " 金币"});
         }
         if (!friendly) {
             facts.push_back({"已对战", std::to_string(games)});
@@ -165,3 +170,4 @@ void GameApp::journal(ImVec2 at, ImVec2 size) {
     }
 }
 }
+//（注：内容由AI生成）

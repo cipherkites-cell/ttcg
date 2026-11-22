@@ -451,8 +451,8 @@ float GameApp::ruleChips(ImVec2 at, float width, unsigned flags, int trade, bool
         }
     // The trade rule decides which cards change hands, so it is named apart from the rules of play.
     const auto caption = [](const Chip& chip) {
-        return std::string(chip.change ? (chip.active ? "+ " : "− ") : "") + (chip.trade >= 0 ? "交易：" : "") +
-               zhRuleName(chip.name);
+        const std::string shown = chip.trade >= 0 ? zhTradeName(chip.trade) : zhRuleName(chip.name);
+        return std::string(chip.change ? (chip.active ? "+ " : "− ") : "") + (chip.trade >= 0 ? "交易：" : "") + shown;
     };
     std::vector<float> widths, rows{0};
     for (const auto& chip : chips) {
@@ -598,20 +598,20 @@ void GameApp::closeView() {
     send("close");
 }
 GameApp::FooterPrompts GameApp::footerPrompts() const {
-    if (capturing()) return {"Cancel", nullptr, false};
+    if (capturing()) return {"取消", nullptr, false};
     const auto page = label(state, "screen"), phase = label(state, "phase");
     if (page == "album" && phase == "ready")
-        return {flag(state, "matchContext") ? "Back" : "Close",
-                "Select",
+        return {flag(state, "matchContext") ? "返回" : "关闭",
+                "选择",
                 tab == 0 || tab == 1,
                 tab == 1 ? "Enter" : nullptr,
                 "360_X",
-                tab == 1 ? "Add to deck" : nullptr};
-    if (page == "shop") return {"Close", "Select", true};
-    if (page == "lesson") return {"Close", "Select", false};
-    if (phase == "ready") return {"Close", "Select", true};
-    if (phase == "match") return {"Leave", "Play card", true};
-    return {"Close", "Select", false};
+                tab == 1 ? "加入牌组" : nullptr};
+    if (page == "shop") return {"关闭", "选择", true};
+    if (page == "lesson") return {"关闭", "选择", false};
+    if (phase == "ready") return {"关闭", "选择", true};
+    if (phase == "match") return {"离桌", "出牌", true};
+    return {"关闭", "选择", false};
 }
 void GameApp::header(ImVec2 at, ImVec2 size) {
     // A skin titles the window with its own band, or a hairline; closing lives in the prompt bar.
@@ -729,7 +729,7 @@ void GameApp::draw() {
     size.y -= promptBar;
     if (page == "album" && phase == "ready") {
         // The tabs share the title's row, so every page keeps the height a second bar would take.
-        static const char* names[]{"Cards", "Decks", "Journal", "Rules", "Tournaments", "Settings"};
+        static const char* names[]{"卡牌", "牌组", "日志", "规则", "锦标赛", "设置"};
         const int order[]{0, 1, 2, 4, 3, 5};
         const float k = skinUnit(), band = std::min(108 * k, 50 * scale);
         const float tabHeight = 40 * scale, tabY = frameAt.y + 2 * k + (band - tabHeight) * .5f + titleDrop();
@@ -849,3 +849,4 @@ void GameApp::draw() {
 }
 
 }
+//（注：内容由AI生成）
