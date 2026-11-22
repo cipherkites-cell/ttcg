@@ -1,4 +1,5 @@
 // Keeps the collection in step with the world: forms, opponent stock, tournaments and their couriers.
+#include "ChineseText.h"
 #include "PluginState.h"
 
 namespace campaign {
@@ -209,7 +210,7 @@ void updateTournaments(bool background) {
     for (auto id : ttcg::updateDevelopmentTournaments(saved, development, hour, tournamentVenue()))
         if (const auto* e = ttcg::tournament(saved, id))
             SKSE::log::info("Development {} {} in {}: {}", ttcg::tournamentCircuitName(e->circuit), id,
-                            ttcg::holdName(e->hold), e->circuit ? "awaiting courier" : "ready at inn");
+                            ttcg::zhHoldText(ttcg::holdName(e->hold)), e->circuit ? "等待信使" : "已在旅店就绪");
     if (!hadAlbum && hasAlbum()) ensureAlbum();
     if (progression && hasAlbum()) progression->value = 2.0f;
     ttcg::tickTournaments(saved, hour, actorHold(RE::PlayerCharacter::GetSingleton(), 0),

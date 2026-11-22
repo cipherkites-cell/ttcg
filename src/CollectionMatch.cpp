@@ -83,7 +83,7 @@ void finish(int winner, unsigned selection, std::uint32_t recoveryLedger) {
 }
 std::string savedMatchName() {
     auto actor = resolveID<RE::Actor>(savedMatch.opponent);
-    return actor ? actor->GetName() : "your opponent";
+    return actor ? actor->GetName() : "你的对手";
 }
 void resolveSavedMatch(bool forfeit) {
     if (!savedMatch.present) return;

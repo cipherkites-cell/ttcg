@@ -1,7 +1,33 @@
 // The collection, lobby and journal as the JSON snapshot the interface reads.
+#include <unordered_map>
 #include "PluginState.h"
 
 namespace campaign {
+namespace {
+// The roster is authored, but what a player reads should be what the game calls
+// these people and places: one pass over the actors covers every profile at once.
+struct ActorText {
+    const char* name = nullptr;
+    const char* place = nullptr;
+};
+void collectActorTexts(std::unordered_map<std::uint32_t, ActorText>& out) {
+    auto* lists = RE::ProcessLists::GetSingleton();
+    if (!lists) return;
+    lists->ForAllActors([&](RE::Actor* actor) {
+        if (!actor) return RE::BSContainer::ForEachResult::kContinue;
+        const auto* npc = actor->GetActorBase();
+        if (!npc) return RE::BSContainer::ForEachResult::kContinue;
+        const auto base = npc->GetFormID();
+        if (out.contains(base)) return RE::BSContainer::ForEachResult::kContinue;
+        ActorText text{actor->GetName(), nullptr};
+        if (auto* location = actor->GetCurrentLocation()) text.place = ttcg::namedPlace(location);
+        if (!text.place)
+            if (auto* cell = actor->GetParentCell()) text.place = cell->GetFullName();
+        out.emplace(base, text);
+        return RE::BSContainer::ForEachResult::kContinue;
+    });
+}
+} // namespace
 std::string json(RE::Actor* actor, bool, bool conceal) {
     const auto* event = ttcg::tournament(saved, tournamentID);
     const auto displayHold = event ? event->hold : actorHold(actor);
@@ -72,6 +98,8 @@ std::string json(RE::Actor* actor, bool, bool conceal) {
         out += std::to_string(ttcg::displayIndex(revealed[i]));
     }
     out += "],\"roster\":[";
+    std::unordered_map<std::uint32_t, ActorText> actorTexts;
+    collectActorTexts(actorTexts);
     bool first = true;
     for (std::size_t i = 0; i < ttcg::opponents.size(); ++i) {
         if (!development.showsPlayer(saved, i)) continue;
@@ -79,9 +107,12 @@ std::string json(RE::Actor* actor, bool, bool conceal) {
         first = false;
         const auto& p = ttcg::opponents[i];
         const auto& r = ttcg::progress(saved, i).competitive;
+        const ActorText text = actorTexts.contains(p.base) ? actorTexts.at(p.base) : ActorText{};
+        const char* name = text.name && *text.name ? text.name : p.name;
+        const char* place = text.place && *text.place ? text.place : p.location;
         out += std::format(
             "{{\"name\":{},\"location\":{},\"skill\":{},\"wins\":{},\"losses\":{},\"draws\":{},\"unlocked\":{}}}",
-            ttcg::quote(p.name), ttcg::quote(p.location), ttcg::quote(p.skillName), r.wins, r.losses, r.draws,
+            ttcg::quote(name), ttcg::quote(place), ttcg::quote(p.skillName), r.wins, r.losses, r.draws,
             unlocked(i) ? "true" : "false");
         out.pop_back();
         out += ",\"holdID\":" +
