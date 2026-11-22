@@ -10,19 +10,19 @@ inline bool finishedMatchSettles(const SavedMatch& table, const CollectionSave& 
     return table.tournament ? !pendingTournamentFoils(s) : !s.contract.choicePending();
 }
 inline std::string_view collectionRecoveryBlocked(const CollectionSave& s, bool interrupted = false) {
-    if (interrupted) return "Finish or forfeit your interrupted game first.";
-    if (s.contract.pending() || s.goldCredit) return "Finish the pending card trade or payment first.";
-    if (pendingTournamentFoils(s)) return "Use or leave your tournament rewards first.";
-    if (tournamentEntryActive(s)) return "Finish or withdraw from your tournament first.";
+    if (interrupted) return "请先结束或认输当前未完成的对局。";
+    if (s.contract.pending() || s.goldCredit) return "请先完成待处理的换卡或付款。";
+    if (pendingTournamentFoils(s)) return "请先使用或放弃你的锦标赛奖励。";
+    if (tournamentEntryActive(s)) return "请先完成或退出当前锦标赛。";
     return {};
 }
 inline std::string_view tesseraResetBlocked(const CollectionSave& s, bool interrupted = false) {
     if (const auto blocked = collectionRecoveryBlocked(s, interrupted); !blocked.empty()) return blocked;
     for (const auto& [id, merchant] : s.merchants)
-        if (merchant.goldCredit) return "Finish pending merchant payments first.";
-    if (s.tournaments.packCredit || s.tournaments.standardPackCredit) return "Collect pending tournament packs first.";
+        if (merchant.goldCredit) return "请先完成待付的商人款项。";
+    if (s.tournaments.packCredit || s.tournaments.standardPackCredit) return "请先领取待发的锦标赛卡包。";
     for (const auto& [id, gold] : s.tournaments.npcGold)
-        if (gold) return "Finish pending tournament payments first.";
+        if (gold) return "请先完成待发的锦标赛奖金。";
     return {};
 }
 struct DroppedPayments {

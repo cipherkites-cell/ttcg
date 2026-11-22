@@ -27,9 +27,9 @@ inline constexpr PackStock packStockFor(bool enabled, bool routineFound) {
 // What the player is told in Settings when merchants have no packs to sell.
 inline constexpr std::string_view packNotice(PackStock stock) {
     switch (stock) {
-        case PackStock::SwitchedOff: return "Merchants don't stock card packs: VendorPackInjection is 0 in TTCG.ini.";
+        case PackStock::SwitchedOff: return "商人不出售卡包：TTCG.ini 里的 VendorPackInjection 为 0。";
         case PackStock::UnknownGame:
-            return "Merchants don't stock card packs on this version of Skyrim. Tessera needs an update for it.";
+            return "此版本的《天际》里商人不进卡包，Tessera 需要针对该版本更新。";
         default: return {};
     }
 }
