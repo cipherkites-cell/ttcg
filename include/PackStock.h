@@ -28,8 +28,7 @@ inline constexpr PackStock packStockFor(bool enabled, bool routineFound) {
 inline constexpr std::string_view packNotice(PackStock stock) {
     switch (stock) {
         case PackStock::SwitchedOff: return "商人不出售卡包：TTCG.ini 里的 VendorPackInjection 为 0。";
-        case PackStock::UnknownGame:
-            return "此版本的《天际》里商人不进卡包，Tessera 需要针对该版本更新。";
+        case PackStock::UnknownGame: return "此版本的《天际》里商人不进卡包，Tessera 需要针对该版本更新。";
         default: return {};
     }
 }
