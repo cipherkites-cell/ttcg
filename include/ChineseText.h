@@ -28,6 +28,88 @@ inline std::string_view zhGroupName(std::size_t index) {
 
 // Group names arrive from the game state as the English canon (activeGroup and the
 // rule-culture log), so they are translated by text rather than by index.
+// The holds and the opponent ranks. The campaign data keeps the English names as
+// its keys; these are only what the journal and the profiles draw.
+inline std::string zhHoldText(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 11> table{{
+        {"Whiterun", "白漫"},
+        {"Falkreath", "佛克瑞斯"},
+        {"Haafingar", "海芬加"},
+        {"Hjaalmarch", "希雅陲"},
+        {"The Pale", "苍原"},
+        {"The Rift", "裂痕"},
+        {"Winterhold", "冬堡"},
+        {"Eastmarch", "东陲"},
+        {"The Reach", "瑞驰"},
+        {"Solstheim", "索瑟海姆"},
+        {"Travellers", "旅行者"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
+// A capture announcement can name several rules at once ("Same / Plus"), so each
+// segment goes through the table on its own.
+// A save made before the translation still holds "Deck 1" as its name; that is
+// the only stock name the UI shows, so it is translated on the way out.
+inline std::string zhDeckText(std::string_view name) {
+    if (name.size() > 5 && name.substr(0, 5) == "Deck " &&
+        name.find_first_not_of("0123456789", 5) == std::string_view::npos)
+        return "牌组 " + std::string(name.substr(5));
+    return std::string(name);
+}
+inline std::string zhChineseRule(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 19> table{{
+        {"Vanguard", "先锋"},   {"Open", "明牌"},     {"Three Open", "三明牌"}, {"Same", "相同"},
+        {"Same Wall", "同墙"},  {"Plus", "相加"},     {"Reverse", "逆转"},      {"Fallen Ace", "落难王牌"},
+        {"Affinity", "亲和"},   {"Legion", "军团"},   {"Decimation", "减损"},   {"Order", "顺序"},
+        {"Chaos", "混乱"},      {"Swap", "交换"},     {"Sudden Death", "骤死"}, {"Ascension", "升格"},
+        {"Descension", "降格"}, {"Dominion", "统御"}, {"Trade", "交易"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
+inline std::string zhRuleLabelText(std::string_view label) {
+    std::string out;
+    std::string_view rest = label;
+    while (!rest.empty()) {
+        const auto cut = rest.find(" / ");
+        const auto piece = rest.substr(0, cut);
+        if (!out.empty()) out += " / ";
+        out += piece == "Combo" ? std::string("连锁") : zhChineseRule(piece);
+        if (cut == std::string_view::npos) break;
+        rest.remove_prefix(cut + 3);
+    }
+    return out;
+}
+inline std::string zhReputationText(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 6> table{{
+        {"Unknown", "未知"},
+        {"Unsung", "默默无闻"},
+        {"Recognized", "初露头角"},
+        {"Respected", "受人敬重"},
+        {"Famous", "声名远扬"},
+        {"Legendary", "传说"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
+inline std::string zhSkillText(std::string_view english) {
+    static const std::array<std::pair<std::string_view, std::string_view>, 6> table{{
+        {"Beginner", "新手"},
+        {"Learner", "学徒"},
+        {"Regular", "一般"},
+        {"Experienced", "老练"},
+        {"Expert", "精通"},
+        {"Master", "大师"},
+    }};
+    for (const auto& entry : table)
+        if (entry.first == english) return std::string(entry.second);
+    return std::string(english);
+}
+
 inline std::string zhGroupText(std::string_view english) {
     for (std::size_t i = 0; i < creatureGroups.size(); ++i)
         if (creatureGroups[i] == english) return std::string(zhGroupName(i));
