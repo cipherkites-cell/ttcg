@@ -281,8 +281,8 @@ inline bool opponentHasCards(const CollectionSave& s, int i) {
     return false;
 }
 inline const char* cardsPreventingPlay(const Stock& player, const Stock& rival, int i) {
-    if (playableCount(playableOpponentStock(rival, i)) < 5) return "They don't have enough cards for a game.";
-    if (playableCount(player) < 5) return "You don't have enough cards for a game.";
+    if (playableCount(playableOpponentStock(rival, i)) < 5) return "对方的卡牌不足，凑不成一局。";
+    if (playableCount(player) < 5) return "你的卡牌不足，凑不成一局。";
     return "";
 }
 inline int handRuleScore(const Hand& hand, unsigned rules) {
