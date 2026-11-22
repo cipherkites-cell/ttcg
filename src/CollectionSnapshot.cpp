@@ -20,7 +20,7 @@ void collectActorTexts(std::unordered_map<std::uint32_t, ActorText>& out) {
         const auto base = npc->GetFormID();
         if (out.contains(base)) return RE::BSContainer::ForEachResult::kContinue;
         ActorText text{actor->GetName(), nullptr};
-        if (auto* location = actor->GetCurrentLocation()) text.place = ttcg::namedPlace(location);
+        if (auto* location = actor->GetCurrentLocation()) text.place = namedPlace(location);
         if (!text.place)
             if (auto* cell = actor->GetParentCell()) text.place = cell->GetFullName();
         out.emplace(base, text);
@@ -213,3 +213,4 @@ std::string json(RE::Actor* actor, bool, bool conceal) {
     return out;
 }
 }
+//（注：内容由AI生成）
