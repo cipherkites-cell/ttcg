@@ -3,6 +3,7 @@
 #include "Tournaments.h"
 #include "Presentation.h"
 #include "GameDate.h"
+#include "OpponentNames.h"
 namespace ttcg {
 inline bool tournamentRewardAllowsCommand(const CollectionSave& s, std::string_view command) {
     // The final win awards foil choices before its capture animation finishes.
@@ -14,15 +15,15 @@ inline bool tournamentRewardAllowsCommand(const CollectionSave& s, std::string_v
 inline std::string tournamentPrize(const Tournament& e) {
     if (e.reward == 0) {
         auto i = cardIndex(e.trophy);
-        return i >= 0 ? cards[i].name : "Trophy card";
+        return i >= 0 ? zhCardName(cards[i].name) : "奖杯卡";
     }
-    if (e.reward == EpicCards) return e.circuit ? std::to_string(e.quantity) + " Epic foils" : "Epic card";
-    if (e.reward == 1) return std::to_string(e.quantity) + (e.quantity == 1 ? " tournament pack" : " tournament packs");
-    if (e.reward == 2) return std::to_string(e.quantity) + " standard packs";
-    return std::to_string(e.quantity) + (e.quantity == 1 ? " foil upgrade" : " foil upgrades");
+    if (e.reward == EpicCards) return e.circuit ? std::to_string(e.quantity) + " 张史诗闪卡" : "史诗卡";
+    if (e.reward == 1) return std::to_string(e.quantity) + " 个锦标赛补充包";
+    if (e.reward == 2) return std::to_string(e.quantity) + " 个标准补充包";
+    return std::to_string(e.quantity) + " 张闪卡升级";
 }
 inline std::string tournamentsJson(const CollectionSave& s, unsigned hour, unsigned venue, unsigned registration = 0,
-                                   GameDate date = {}, std::string_view player = "You", unsigned currentHold = 0) {
+                                   GameDate date = {}, std::string_view player = "你", unsigned currentHold = 0) {
     std::string out = "{\"hour\":" + std::to_string(hour) + ",\"venue\":" + std::to_string(venue) +
                       ",\"currentHold\":" + std::to_string(currentHold) + ",\"events\":[";
     bool first = true;
@@ -77,7 +78,7 @@ inline std::string tournamentsJson(const CollectionSave& s, unsigned hour, unsig
             const auto i = opponentIndex(base);
             out += "{\"id\":" + std::to_string(base) + ",\"name\":" +
                    quote(base == tournamentPlayer ? std::string(player)
-                         : i >= 0                 ? opponents[i].name
+                         : i >= 0                 ? zhOpponentName(opponents[i].name)
                                                   : "") +
                    ",\"reserved\":" + (reserved ? "true" : "false") + "}";
         }

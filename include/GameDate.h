@@ -32,9 +32,8 @@ inline GameDate shiftGameDate(GameDate date, int hours) {
     return date;
 }
 inline std::string gameDateText(GameDate date) {
-    constexpr const char* months[]{"Morning Star", "Sun's Dawn", "First Seed",   "Rain's Hand",
-                                   "Second Seed",  "Midyear",    "Sun's Height", "Last Seed",
-                                   "Hearthfire",   "Frostfall",  "Sun's Dusk",   "Evening Star"};
-    return std::format("{} {}, 4E {} · {:02}:00", date.day, months[date.month], date.year, date.hour);
+    constexpr const char* months[]{"晨星", "日晓", "初种", "雨手", "二种", "年中",
+                                   "日高", "末种", "炉火", "霜落", "日暮", "晚星"};
+    return std::format("4E {} 年 {}月 {} 日 · {:02}:00", date.year, months[date.month], date.day, date.hour);
 }
 }
